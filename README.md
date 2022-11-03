@@ -23,6 +23,7 @@ A bot for chess.com that automatically plays chess for you
 8) Enjoy
 
 ## Currently supports
+- Windows/Linux platforms
 - Playing vs humans
 - Playing vs bots
 - Bongcloud mode ( ͡° ͜ʖ ͡° )
