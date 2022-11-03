@@ -1,5 +1,5 @@
 # chess-auto-bot
-A bot for chess.com that automatically plays chess for you
+A bot for chess.com that automatically plays chess for you  
 ![](chess-auto-bot.png)
 
 ## How to install
