@@ -1,6 +1,7 @@
 # chess-auto-bot
 A bot for chess.com that automatically plays chess for you  
-![](match.gif)
+![](match.gif)  
+Note that the mouse is being moved by python
 
 ## How to install
 1) Clone the repository or just download the repository as a .zip
