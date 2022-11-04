@@ -6,10 +6,11 @@ Note that the mouse is being moved by python
 ## How to install
 1) Clone the repository or just download the repository as a .zip
 2) Download Stockfish from https://stockfishchess.org/
-3) `cd chess-auto-bot`
-4) Windows: `python -m venv venv`  
+3) Open a Terminal
+4) `cd chess-auto-bot`
+5) Windows: `python -m venv venv`  
    Linux: `python3 -m venv venv`
-5) Windows: `venv\Scripts\pip.exe install -r requirements.txt`  
+6) Windows: `venv\Scripts\pip.exe install -r requirements.txt`  
    Linux: `venv/bin/pip3 install -r requirements.txt`
 
 ## How to use
