@@ -1,6 +1,6 @@
 # chess-auto-bot
 A bot for chess.com that automatically plays chess for you  
-![](chess-auto-bot.png)
+![](match.gif)
 
 ## How to install
 1) Clone the repository or just download the repository as a .zip
