@@ -36,7 +36,7 @@ class GUI:
         # Set the window properties
         master.title("Chess")
         master.geometry("370x300")
-        master.iconphoto(True, tk.PhotoImage(file="assets/pawn_32x32.png"))
+        master.iconphoto(True, tk.PhotoImage(file="src/assets/pawn_32x32.png"))
         master.resizable(False, False)
         master.attributes('-topmost', True)
         master.protocol("WM_DELETE_WINDOW", self.on_close_listener)
