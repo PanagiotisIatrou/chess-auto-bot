@@ -37,10 +37,13 @@ class StockfishBot:
         # Find the square names list
         square_names = None
         try:
-            square_names = self.chrome.find_elements(By.XPATH, "//*[@id='board-vs-personalities']//*[name()='svg']//*")
+            coordinates = self.chrome.find_element(By.XPATH, "//*[@id='board-vs-personalities']//*[name()='svg']")
+            square_names = coordinates.find_elements(By.XPATH, ".//*")
         except NoSuchElementException:
             try:
-                square_names = self.chrome.find_elements(By.XPATH, "//*[@id='board-single']//*[name()='svg']//*")
+                coordinates = self.chrome.find_elements(By.XPATH, "//*[@id='board-single']//*[name()='svg']")
+                coordinates = [x for x in coordinates if x.get_attribute("class") == "coordinates"][0]
+                square_names = coordinates.find_elements(By.XPATH, ".//*")
             except NoSuchElementException:
                 self.is_white = None
                 return
@@ -58,10 +61,6 @@ class StockfishBot:
                 min_x = x
                 max_y = y
                 elem = name_element
-
-        if elem is None:
-            self.is_white = None
-            return
 
         # Use this square to determine whether the player is white or black
         num = elem.text
