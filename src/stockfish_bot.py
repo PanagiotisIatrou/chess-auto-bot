@@ -59,6 +59,10 @@ class StockfishBot:
                 max_y = y
                 elem = name_element
 
+        if elem is None:
+            self.is_white = None
+            return
+
         # Use this square to determine whether the player is white or black
         num = elem.text
         if num == "1":
