@@ -339,7 +339,7 @@ class GUI:
 
     def on_select_stockfish_button_listener(self):
         # Create the file dialog
-        f = filedialog.askopenfilename(filetypes=[("All Files", "*.*")])
+        f = filedialog.askopenfilename()
         if f is None:
             return
 
