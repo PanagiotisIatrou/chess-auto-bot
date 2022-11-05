@@ -1,6 +1,11 @@
 # chess-auto-bot
 A bot for chess.com and lichess.org that automatically plays chess for you  
+
+Chess.com  
 ![](match.gif)  
+
+Lichess  
+![](match_lichess.gif)  
 Note that the mouse is being moved by python
 
 ## How to install
