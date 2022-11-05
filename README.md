@@ -2,7 +2,7 @@
 A bot for chess.com and lichess.org that automatically plays chess for you  
 
 Chess.com  
-![](match.gif)  
+![](match_chesscom.gif)  
 
 Lichess  
 ![](match_lichess.gif)  
