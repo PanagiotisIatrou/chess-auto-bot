@@ -4,7 +4,7 @@ A bot for chess.com and lichess.org that automatically plays chess for you
 Chess.com  
 ![](match_chesscom.gif)  
 
-Lichess  
+Lichess.org  
 ![](match_lichess.gif)  
 Note that the mouse is being moved by python
 
