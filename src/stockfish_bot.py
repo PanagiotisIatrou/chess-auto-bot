@@ -6,8 +6,8 @@ import sys
 import os
 import chess
 import re
-from src.grabbers.chesscom_grabber import ChesscomGrabber
-from src.grabbers.lichess_grabber import LichessGrabber
+from grabbers.chesscom_grabber import ChesscomGrabber
+from grabbers.lichess_grabber import LichessGrabber
 from utilities import char_to_num
 
 
