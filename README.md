@@ -1,5 +1,5 @@
 # chess-auto-bot
-A bot for chess.com that automatically plays chess for you  
+A bot for chess.com and lichess.org that automatically plays chess for you  
 ![](match.gif)  
 Note that the mouse is being moved by python
 
@@ -19,13 +19,15 @@ Note that the mouse is being moved by python
 3) Windows: `venv\Scripts\python.exe src\gui.py`  
    Linux: `venv/bin/python3 src/gui.py`
 4) Click Select Stockfish on the GUI that opens. This will open a file explorer. Navigate to the folder where you downloaded Stockfish and select the Stockfish executable.
-5) Click Open Browser. This will open ChromeDriver and load the chess.com website.
+5) Click Open Browser. This will open ChromeDriver and load the selected chess website.
 6) Navigate to a live match (online or vs bot)
 7) Click Start
 8) Enjoy
 
 ## Currently supports
 - Windows/Linux platforms
+- Chess.com
+- Lichess.org
 - Playing vs humans
 - Playing vs bots
 - Bongcloud mode ( ͡° ͜ʖ ͡° )

@@ -20,8 +20,10 @@ class GUI:
         # The Selenium Chrome driver
         self.chrome = None
 
-        # Used for storing the Stockfish Bot class Instance
-        self.stockfish_bot = None
+        # # Used for storing the Stockfish Bot class Instance
+        # self.stockfish_bot = None
+        self.chrome_url = None
+        self.chrome_session_id = None
 
         # Used for the communication between the GUI
         # and the Stockfish Bot process
@@ -35,8 +37,8 @@ class GUI:
 
         # Set the window properties
         master.title("Chess")
-        master.geometry("370x300")
-        master.iconphoto(True, tk.PhotoImage(file="src/assets/pawn_32x32.png"))
+        master.geometry("370x320")
+        master.iconphoto(True, tk.PhotoImage(file="assets/pawn_32x32.png"))
         master.resizable(False, False)
         master.attributes('-topmost', True)
         master.protocol("WM_DELETE_WINDOW", self.on_close_listener)
@@ -53,53 +55,60 @@ class GUI:
         self.status_text = tk.Label(master, text="Inactive", fg="red")
         self.status_text.place(x=45, y=5)
 
+        # Create the website chooser radio buttons
+        self.website = tk.StringVar(value="chesscom")
+        self.chesscom_radio_button = tk.Radiobutton(master, text="Chess.com", variable=self.website, value="chesscom")
+        self.chesscom_radio_button.place(x=0, y=25)
+        self.lichess_radio_button = tk.Radiobutton(master, text="Lichess.org", variable=self.website, value="lichess")
+        self.lichess_radio_button.place(x=0, y=45)
+
         # Create the open browser button
         self.opening_browser = False
         self.opened_browser = False
         self.open_browser_button = tk.Button(master, text="Open Browser", command=self.on_open_browser_button_listener)
-        self.open_browser_button.place(x=5, y=25)
+        self.open_browser_button.place(x=5, y=70)
 
-        # Create the run button
+        # Create the start button
         self.running = False
         self.start_button = tk.Button(master, text="Start", command=self.on_start_button_listener)
         self.start_button["state"] = "disabled"
-        self.start_button.place(x=5, y=55)
+        self.start_button.place(x=5, y=100)
 
         # Create the Slow mover entry field
-        tk.Label(master, text="Slow Mover").place(x=0, y=85)
+        tk.Label(master, text="Slow Mover").place(x=0, y=130)
         self.slow_mover = tk.IntVar(value=100)
         self.slow_mover_entry = tk.Entry(master, textvariable=self.slow_mover, width=35)
-        self.slow_mover_entry.place(x=5, y=105, width=50)
+        self.slow_mover_entry.place(x=5, y=155, width=50)
 
         # Create the bongcloud check button
         self.enable_bongcloud = tk.IntVar()
         self.bongcloud_check_button = tk.Checkbutton(window, text='Bongcloud', variable=self.enable_bongcloud, onvalue=1, offvalue=0)
-        self.bongcloud_check_button.place(x=0, y=130)
+        self.bongcloud_check_button.place(x=0, y=180)
 
         # Separator
-        ttk.Separator(master, orient='horizontal').place(x=0, y=155, width=195)
+        ttk.Separator(master, orient='horizontal').place(x=0, y=205, width=195)
 
         # Create the topmost check button
         self.enable_topmost = tk.IntVar(value=1)
         self.topmost_check_button = tk.Checkbutton(window, text='Window stays on top', variable=self.enable_topmost, onvalue=1, offvalue=0, command=self.on_topmost_check_button_listener)
-        self.topmost_check_button.place(x=0, y=160)
+        self.topmost_check_button.place(x=0, y=210)
 
         # Create the select stockfish button
         self.stockfish_path = ""
         self.select_stockfish_button = tk.Button(master, text="Select Stockfish", command=self.on_select_stockfish_button_listener)
-        self.select_stockfish_button.place(x=5, y=185)
+        self.select_stockfish_button.place(x=5, y=235)
 
         # Create the stockfish path text
         self.stockfish_path_text = tk.Label(master, text="", wraplength=180)
-        self.stockfish_path_text.place(x=5, y=211)
+        self.stockfish_path_text.place(x=5, y=261)
 
         # Create the moves Treeview
-        self.tree = ttk.Treeview(master, column=("#", "White", "Black"), show='headings', height=12, selectmode='browse')
+        self.tree = ttk.Treeview(master, column=("#", "White", "Black"), show='headings', height=13, selectmode='browse')
         self.tree.place(x=195, y=0)
 
         # Add the scrollbar to the Treeview
         self.vsb = ttk.Scrollbar(master, orient="vertical", command=self.tree.yview)
-        self.vsb.place(x=195 + 155 + 5, y=0, height=120 * 2 + 29)
+        self.vsb.place(x=195 + 155 + 5, y=0, height=130 * 2 + 29)
         self.tree.configure(yscrollcommand=self.vsb.set)
 
         # Create the columns
@@ -112,7 +121,7 @@ class GUI:
 
         # Create the export PGN button
         self.export_pgn_button = tk.Button(master, text="Export PGN", command=self.on_export_pgn_button_listener)
-        self.export_pgn_button.place(x=195, y=270, width=174)
+        self.export_pgn_button.place(x=195, y=290, width=174)
 
         # Start the process checker thread
         process_checker_thread = threading.Thread(target=self.process_checker_thread)
@@ -156,7 +165,6 @@ class GUI:
                     self.open_browser_button.update()
 
                     self.on_stop_button_listener()
-                    self.stockfish_bot = None
                     self.chrome = None
             except IndexError:
                 pass
@@ -245,12 +253,14 @@ class GUI:
             return
 
         # Open chess.com
-        self.chrome.get("https://www.chess.com")
+        if self.website.get() == "chesscom":
+            self.chrome.get("https://www.chess.com")
+        else:
+            self.chrome.get("https://www.lichess.org")
 
         # Build Stockfish Bot
-        url = self.chrome.service.service_url
-        session_id = self.chrome.session_id
-        self.stockfish_bot = StockfishBot(url, session_id)
+        self.chrome_url = self.chrome.service.service_url
+        self.chrome_session_id = self.chrome.session_id
 
         # Set Opening Browser button state to opened
         self.opening_browser = False
@@ -281,7 +291,8 @@ class GUI:
         self.stockfish_bot_pipe = parent_conn
 
         # Create the Stockfish Bot process
-        self.stockfish_bot_process = multiprocess.Process(target=self.stockfish_bot.run, args=(child_conn, self.stockfish_path, self.enable_bongcloud.get() == 1, self.slow_mover.get()))
+        self.stockfish_bot_process = StockfishBot(self.chrome_url, self.chrome_session_id, self.website.get(), child_conn, self.stockfish_path, self.enable_bongcloud.get() == 1, self.slow_mover.get())
+        # self.stockfish_bot_process = multiprocess.Process(target=self.stockfish_bot.run, args=(child_conn, self.stockfish_path, self.enable_bongcloud.get() == 1, self.slow_mover.get()))
         self.stockfish_bot_process.start()
 
         # Update the run button
