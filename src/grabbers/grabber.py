@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 
-from src.utilities import attach_to_session
+from utilities import attach_to_session
 
 
 # Base abstract class for different chess sites
