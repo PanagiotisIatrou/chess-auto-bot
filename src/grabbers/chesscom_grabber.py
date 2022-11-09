@@ -119,6 +119,15 @@ class ChesscomGrabber(Grabber):
                         if figure is None:
                             moves_list.append(move.text)
                         else:
-                            moves_list.append(figure + move.text)
+                            # Check if it is promotion
+                            if "=" in move.text:
+                                m = move.text + figure
+                                # If the move is a check, add the + in the end
+                                if "+" in m:
+                                    m = m.replace("+", "")
+                                    m += "+"
+                                moves_list.append(m)
+                            else:
+                                moves_list.append(figure + move.text)
 
         return moves_list
