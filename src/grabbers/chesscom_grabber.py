@@ -79,53 +79,46 @@ class ChesscomGrabber(Grabber):
             try:
                 move_list_elem = self.chrome.find_element(By.XPATH, "//*[@id='move-list']/vertical-move-list")
             except NoSuchElementException:
-                return None
-
-        # Get a list with all the lines with the moves
-        children = None
-        try:
-            children = move_list_elem.find_elements(By.XPATH, "./*")
-        except NoSuchElementException:
-            return None
-
-        moves_list = []
-        # Loop for every line in the moves list
-        for moves_line in children:
-            # Get the moves contained in that line
-            try:
-                moves = moves_line.find_elements(By.XPATH, "./*")
-            except NoSuchElementException:
-                return None
-
-            # The second move index is different for
-            # bot games and online games
-            extra_index = []
-            if len(moves) == 2 and vs_bot:
-                extra_index = [1]
-            elif len(moves) == 4 and not vs_bot:
-                extra_index = [2]
-
-            # Loop for every move in the line
-            for i in [0] + extra_index:
-                move = moves[i]
-
-                # Find out if the move contains a piece character
-                sub = None
                 try:
-                    sub = move.find_elements(By.XPATH, "./*")
+                    move_list_elem = self.chrome.find_element(By.XPATH, "/html/body/div[4]/div/vertical-move-list")
                 except NoSuchElementException:
                     return None
 
-                if len(sub) == 0:
-                    moves_list.append(move.text)
-                else:
-                    # Get the piece used to make the move
-                    piece = str(sub[0].get_attribute("data-figurine"))
+        # Get a list with all the lines with the moves
+        move_lines = None
+        try:
+            move_lines = move_list_elem.find_elements(By.XPATH, "./*")
+        except NoSuchElementException:
+            return None
 
-                    # Check if move was made with a piece or was en passant
-                    if piece == "None":
+        # Select all children with class containing "white node" or "black node"
+        # Moves that are not pawn moves have a different structure
+        # containing children
+
+        moves_list = []
+        for move_line in move_lines:
+            moves = move_line.find_elements(By.XPATH, "./*")
+            for move in moves:
+                move_class = move.get_attribute("class")
+
+                # Check if it is indeed a move
+                if "white node" in move_class or "black node" in move_class:
+                    # Check if it has a figure
+                    child = None
+                    try:
+                        child = move.find_element(By.XPATH, "./*")
+                    except NoSuchElementException:
+                        child = None
+
+                    if child is None:
                         moves_list.append(move.text)
                     else:
-                        moves_list.append(piece + move.text)
+                        figure = child.get_attribute("data-figurine")
+
+                        # Check if it was en-passant or figure-move
+                        if figure is None:
+                            moves_list.append(move.text)
+                        else:
+                            moves_list.append(figure + move.text)
 
         return moves_list
