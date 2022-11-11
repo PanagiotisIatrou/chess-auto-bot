@@ -12,7 +12,7 @@ from utilities import char_to_num
 
 
 class StockfishBot(multiprocess.Process):
-    def __init__(self, chrome_url, chrome_session_id, website, pipe, stockfish_path, bongcloud, slow_mover):
+    def __init__(self, chrome_url, chrome_session_id, website, pipe, stockfish_path, bongcloud, slow_mover, skill_level):
         multiprocess.Process.__init__(self)
 
         self.chrome_url = chrome_url
@@ -22,6 +22,7 @@ class StockfishBot(multiprocess.Process):
         self.stockfish_path = stockfish_path
         self.bongcloud = bongcloud
         self.slow_mover = slow_mover
+        self.skill_level = skill_level
         self.grabber = None
 
     # Converts a move to screen coordinates
@@ -88,6 +89,7 @@ class StockfishBot(multiprocess.Process):
             "Hash": 2048,
             "Ponder": "true",
             "Slow Mover": self.slow_mover,
+            "Skill Level": self.skill_level
         }
         try:
             stockfish = Stockfish(path=self.stockfish_path, parameters=parameters)
