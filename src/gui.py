@@ -37,7 +37,7 @@ class GUI:
 
         # Set the window properties
         master.title("Chess")
-        master.geometry("370x360")
+        master.geometry("370x440")
         master.iconphoto(True, tk.PhotoImage(file="src/assets/pawn_32x32.png"))
         master.resizable(False, False)
         master.attributes('-topmost', True)
@@ -74,47 +74,65 @@ class GUI:
         self.start_button["state"] = "disabled"
         self.start_button.place(x=5, y=100)
 
-        # Create the Slow mover entry field
-        tk.Label(master, text="Slow Mover").place(x=0, y=130)
-        self.slow_mover = tk.IntVar(value=100)
-        self.slow_mover_entry = tk.Entry(master, textvariable=self.slow_mover, width=35)
-        self.slow_mover_entry.place(x=70, y=130, width=50)
-
         # Create the bongcloud check button
         self.enable_bongcloud = tk.IntVar()
         self.bongcloud_check_button = tk.Checkbutton(window, text='Bongcloud', variable=self.enable_bongcloud, onvalue=1, offvalue=0)
-        self.bongcloud_check_button.place(x=0, y=155)
-
-        # Create the skill level scale
-        tk.Label(master, text="Skill Level").place(x=0, y=190)
-        self.skill_level = tk.IntVar(value=20)
-        self.skill_level_scale = tk.Scale(master, from_=0, to=20, orient=tk.HORIZONTAL, variable=self.skill_level)
-        self.skill_level_scale.place(x=60, y=173, width=100)
+        self.bongcloud_check_button.place(x=0, y=125)
 
         # Separator
-        ttk.Separator(master, orient='horizontal').place(x=0, y=235, width=195)
+        ttk.Separator(master, orient='horizontal').place(x=0, y=165, width=195)
+        tk.Label(master, text="Stockfish parameters").place(x=35, y=155)
+
+        # Create the Slow mover entry field
+        tk.Label(master, text="Slow Mover").place(x=0, y=185)
+        self.slow_mover = tk.IntVar(value=100)
+        self.slow_mover_entry = tk.Entry(master, textvariable=self.slow_mover, width=35)
+        self.slow_mover_entry.place(x=70, y=185, width=40)
+
+        # Create the skill level scale
+        tk.Label(master, text="Skill Level").place(x=0, y=220)
+        self.skill_level = tk.IntVar(value=20)
+        self.skill_level_scale = tk.Scale(master, from_=0, to=20, orient=tk.HORIZONTAL, variable=self.skill_level)
+        self.skill_level_scale.place(x=60, y=203, width=100)
+
+        # Create the memory entry field
+        tk.Label(master, text="Memory").place(x=0, y=255)
+        self.memory = tk.IntVar(value=512)
+        self.memory_entry = tk.Entry(master, textvariable=self.memory, justify="center", width=35)
+        self.memory_entry.place(x=52, y=255, width=40)
+        tk.Label(master, text="MB").place(x=92, y=255)
+
+        # Create the CPU threads entry field
+        tk.Label(master, text="CPU Threads").place(x=0, y=285)
+        self.cpu_threads = tk.IntVar(value=1)
+        self.cpu_threads_entry = tk.Entry(master, textvariable=self.cpu_threads, justify="center", width=35)
+        self.cpu_threads_entry.place(x=75, y=285, width=30)
+
+        # Separator
+        ttk.Separator(master, orient='horizontal').place(x=0, y=325, width=195)
+        tk.Label(master, text="Misc").place(x=75, y=315)
 
         # Create the topmost check button
         self.enable_topmost = tk.IntVar(value=1)
         self.topmost_check_button = tk.Checkbutton(window, text='Window stays on top', variable=self.enable_topmost, onvalue=1, offvalue=0, command=self.on_topmost_check_button_listener)
-        self.topmost_check_button.place(x=0, y=245)
+        self.topmost_check_button.place(x=0, y=335)
 
         # Create the select stockfish button
         self.stockfish_path = ""
         self.select_stockfish_button = tk.Button(master, text="Select Stockfish", command=self.on_select_stockfish_button_listener)
-        self.select_stockfish_button.place(x=5, y=270)
+        self.select_stockfish_button.place(x=5, y=360)
 
         # Create the stockfish path text
         self.stockfish_path_text = tk.Label(master, text="", wraplength=180)
-        self.stockfish_path_text.place(x=5, y=295)
+        self.stockfish_path_text.place(x=5, y=385)
 
         # Create the moves Treeview
-        self.tree = ttk.Treeview(master, column=("#", "White", "Black"), show='headings', height=15, selectmode='browse')
+        self.tree = ttk.Treeview(master, column=("#", "White", "Black"), show='headings', height=19, selectmode='browse')
         self.tree.place(x=195, y=0)
 
         # Add the scrollbar to the Treeview
         self.vsb = ttk.Scrollbar(master, orient="vertical", command=self.tree.yview)
-        self.vsb.place(x=195 + 155 + 5, y=0, height=150 * 2 + 29)
+        self.vsb.place(x=195 + 155 + 5, y=0, height=190 * 2 + 29)
         self.tree.configure(yscrollcommand=self.vsb.set)
 
         # Create the columns
@@ -127,7 +145,7 @@ class GUI:
 
         # Create the export PGN button
         self.export_pgn_button = tk.Button(master, text="Export PGN", command=self.on_export_pgn_button_listener)
-        self.export_pgn_button.place(x=195, y=330, width=174)
+        self.export_pgn_button.place(x=195, y=410, width=174)
 
         # Start the process checker thread
         process_checker_thread = threading.Thread(target=self.process_checker_thread)
@@ -297,7 +315,7 @@ class GUI:
         self.stockfish_bot_pipe = parent_conn
 
         # Create the Stockfish Bot process
-        self.stockfish_bot_process = StockfishBot(self.chrome_url, self.chrome_session_id, self.website.get(), child_conn, self.stockfish_path, self.enable_bongcloud.get() == 1, self.slow_mover.get(), self.skill_level.get())
+        self.stockfish_bot_process = StockfishBot(self.chrome_url, self.chrome_session_id, self.website.get(), child_conn, self.stockfish_path, self.enable_bongcloud.get() == 1, self.slow_mover.get(), self.skill_level.get(), self.memory.get(), self.cpu_threads.get())
         self.stockfish_bot_process.start()
 
         # Update the run button

@@ -36,6 +36,9 @@ Note that the mouse is being moved by python
 - Playing vs humans
 - Playing vs bots
 - Bongcloud mode ( ͡° ͜ʖ ͡° )
+- Skill level selection (0-20)
+- Memory (RAM) usage selection
+- CPU threads number selection
 - Slow Mover option (defaults to 100, 10 &le; Slow Mover &le; 1000)  
   lower values will make Stockfish take less time in games, higher values will make it think longer
 - Exporting finished games to PGN
