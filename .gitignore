@@ -1,4 +1,4 @@
 .idea
-stockfish_15_win_x64
+stockfish_15_win_x64_avx2
 __pycache__
 venv

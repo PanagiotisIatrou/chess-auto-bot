@@ -10,9 +10,14 @@ class LichessGrabber(Grabber):
 
     def update_board_elem(self):
         try:
+            # Try finding the normal board
             self._board_elem = self.chrome.find_element(By.XPATH, '//*[@id="main-wrap"]/main/div[1]/div[1]/div/cg-container')
         except NoSuchElementException:
-            self._board_elem = None
+            try:
+                # Try finding the board in the puzzles page
+                self._board_elem = self.chrome.find_element(By.XPATH, '/html/body/div[2]/main/div[1]/div/cg-container')
+            except NoSuchElementException:
+                self._board_elem = None
 
     def update_player_color(self):
         # Get "ranks" child
@@ -32,13 +37,22 @@ class LichessGrabber(Grabber):
             else:
                 return False
         except NoSuchElementException:
-            # Return False since the game over window is not found
-            return False
+            # Try finding the puzzles game over window
+            try:
+                game_over_window = self.chrome.find_element(By.XPATH, '/html/body/div[2]/main/div[2]/div[3]/div[1]')
+                if game_over_window is not None and game_over_window.text == "Success!":
+                    return True
+                else:
+                    return False
+            except NoSuchElementException:
+                return False
 
     def get_move_list(self):
         # Find the moves list
         move_list_elem = None
+        puzzles = False
         try:
+            # Try finding the normal move list
             move_list_elem = self.chrome.find_element(By.XPATH, '//*[@id="main-wrap"]/main/div[1]/rm6/l4x')
         except NoSuchElementException:
             try:
@@ -46,12 +60,20 @@ class LichessGrabber(Grabber):
                 if move_list_elem is not None:
                     return []
             except NoSuchElementException:
-                return None
+                try:
+                    # Try finding the move list in the puzzles page
+                    move_list_elem = self.chrome.find_element(By.XPATH, '/html/body/div[2]/main/div[2]/div[2]/div')
+                    puzzles = True
+                except NoSuchElementException:
+                    return None
 
         # Get a list with all the lines with the moves
         children = None
         try:
-            children = move_list_elem.find_elements(By.TAG_NAME, "u8t")
+            if not puzzles:
+                children = move_list_elem.find_elements(By.TAG_NAME, "u8t")
+            else:
+                children = move_list_elem.find_elements(By.TAG_NAME, "move")
         except NoSuchElementException:
             return None
 

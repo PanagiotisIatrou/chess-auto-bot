@@ -35,6 +35,7 @@ Note that the mouse is being moved by python
 - Lichess.org
 - Playing vs humans
 - Playing vs bots
+- Lichess puzzles
 - Bongcloud mode ( ͡° ͜ʖ ͡° )
 - Skill level selection (0-20)
 - Memory (RAM) usage selection
