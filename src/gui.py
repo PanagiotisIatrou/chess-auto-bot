@@ -37,7 +37,7 @@ class GUI:
 
         # Set the window properties
         master.title("Chess")
-        master.geometry("380x490")
+        master.geometry("")
         master.iconphoto(True, tk.PhotoImage(file="src/assets/pawn_32x32.png"))
         master.resizable(False, False)
         master.attributes('-topmost', True)
