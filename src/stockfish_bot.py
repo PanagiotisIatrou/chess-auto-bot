@@ -26,6 +26,7 @@ class StockfishBot(multiprocess.Process):
         self.grabber = None
         self.memory = memory
         self.cpu_threads = cpu_threads
+        self.is_white = None
 
     # Converts a move to screen coordinates
     # Example: "a1" -> (x, y)
@@ -43,7 +44,7 @@ class StockfishBot(multiprocess.Process):
         # Depending on the player color, the board is flipped, so the coordinates need to be adjusted
         x = None
         y = None
-        if self.grabber.is_player_white():
+        if self.is_white:
             x = board_x + square_size * (char_to_num(move[0]) - 1) + square_size / 2
             y = board_y + square_size * (8 - int(move[1])) + square_size / 2
         else:
@@ -110,8 +111,8 @@ class StockfishBot(multiprocess.Process):
                 return
 
             # Find out what color the player has
-            self.grabber.update_player_color()
-            if self.grabber.is_player_white() is None:
+            self.is_white = self.grabber.is_white()
+            if self.is_white is None:
                 self.pipe.send("ERR_COLOR")
                 return
 
@@ -147,7 +148,7 @@ class StockfishBot(multiprocess.Process):
             # Start the game loop
             while True:
                 # Act if it is the player's turn
-                if (self.grabber.is_player_white() and board.turn == chess.WHITE) or (not self.grabber.is_player_white() and board.turn == chess.BLACK):
+                if (self.is_white and board.turn == chess.WHITE) or (not self.is_white and board.turn == chess.BLACK):
                     # Think of a move
                     move = None
                     move_count = len(board.move_stack)

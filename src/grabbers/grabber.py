@@ -8,13 +8,9 @@ class Grabber(ABC):
     def __init__(self, chrome_url, chrome_session_id):
         self.chrome = attach_to_session(chrome_url, chrome_session_id)
         self._board_elem = None
-        self._is_white = None
 
     def get_board(self):
         return self._board_elem
-
-    def is_player_white(self):
-        return self._is_white
 
     # Returns the coordinates of the top left corner of the ChromeDriver
     def get_top_left_corner(self):
@@ -30,7 +26,7 @@ class Grabber(ABC):
     # Sets the _self.is_white variable
     # True if white, False if black, None if the color is not found
     @abstractmethod
-    def update_player_color(self):
+    def is_white(self) -> bool | None:
         pass
 
     # Checks if the game over window popup is open

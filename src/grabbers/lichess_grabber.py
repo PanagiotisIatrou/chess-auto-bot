@@ -19,14 +19,14 @@ class LichessGrabber(Grabber):
             except NoSuchElementException:
                 self._board_elem = None
 
-    def update_player_color(self):
+    def is_white(self) -> bool | None:
         # Get "ranks" child
         children = self._board_elem.find_elements(By.XPATH, "./*")
         child = [x for x in children if "ranks" in x.get_attribute("class")][0]
         if child.get_attribute("class") == "ranks":
-            self._is_white = True
+            return True
         else:
-            self._is_white = False
+            return False
 
     def is_game_over(self):
         try:

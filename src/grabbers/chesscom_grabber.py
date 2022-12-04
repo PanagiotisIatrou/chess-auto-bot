@@ -17,7 +17,7 @@ class ChesscomGrabber(Grabber):
             except NoSuchElementException:
                 self._board_elem = None
 
-    def update_player_color(self):
+    def is_white(self) -> bool | None:
         # Find the square names list
         square_names = None
         try:
@@ -29,8 +29,7 @@ class ChesscomGrabber(Grabber):
                 coordinates = [x for x in coordinates if x.get_attribute("class") == "coordinates"][0]
                 square_names = coordinates.find_elements(By.XPATH, ".//*")
             except NoSuchElementException:
-                self._is_white = None
-                return
+                return None
 
         # Find the square with the smallest x and biggest y values (bottom left number)
         elem = None
@@ -49,9 +48,9 @@ class ChesscomGrabber(Grabber):
         # Use this square to determine whether the player is white or black
         num = elem.text
         if num == "1":
-            self._is_white = True
+            return True
         else:
-            self._is_white = False
+            return False
 
     def is_game_over(self):
         try:
