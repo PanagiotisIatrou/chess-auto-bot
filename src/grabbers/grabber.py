@@ -23,8 +23,8 @@ class Grabber(ABC):
     def update_board_elem(self):
         pass
 
-    # Sets the _self.is_white variable
-    # True if white, False if black, None if the color is not found
+    # Returns True if white, False if black,
+    # None if the color is not found
     @abstractmethod
     def is_white(self) -> bool | None:
         pass
@@ -39,4 +39,15 @@ class Grabber(ABC):
     # Ex. ["e4", "c5", "Nf3"]
     @abstractmethod
     def get_move_list(self):
+        pass
+
+    # Returns True if the player does puzzles
+    # and False if not
+    @abstractmethod
+    def is_game_puzzles(self) -> bool:
+        pass
+
+    # Clicks the next button on the puzzles page
+    @abstractmethod
+    def click_puzzle_next(self) -> None:
         pass

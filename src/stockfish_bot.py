@@ -12,7 +12,7 @@ from utilities import char_to_num
 
 
 class StockfishBot(multiprocess.Process):
-    def __init__(self, chrome_url, chrome_session_id, website, pipe, stockfish_path, bongcloud, slow_mover, skill_level, memory, cpu_threads):
+    def __init__(self, chrome_url, chrome_session_id, website, pipe, stockfish_path, enable_non_stop_puzzles, bongcloud, slow_mover, skill_level, memory, cpu_threads):
         multiprocess.Process.__init__(self)
 
         self.chrome_url = chrome_url
@@ -20,6 +20,7 @@ class StockfishBot(multiprocess.Process):
         self.website = website
         self.pipe = pipe
         self.stockfish_path = stockfish_path
+        self.enable_non_stop_puzzles = enable_non_stop_puzzles
         self.bongcloud = bongcloud
         self.slow_mover = slow_mover
         self.skill_level = skill_level
@@ -79,6 +80,10 @@ class StockfishBot(multiprocess.Process):
 
             pyautogui.moveTo(x=end_pos_x, y=end_pos_y)
             pyautogui.click(button='left')
+
+    def wait_for_gui_to_delete(self):
+        while self.pipe.recv() != "DELETE":
+            pass
 
     def run(self):
         if self.website == "chesscom":
@@ -181,6 +186,11 @@ class StockfishBot(multiprocess.Process):
 
                     # Check if the game is over
                     if board.is_checkmate():
+                        # Send restart message to GUI
+                        if self.enable_non_stop_puzzles and self.grabber.is_game_puzzles():
+                            self.grabber.click_puzzle_next()
+                            self.pipe.send("RESTART")
+                            self.wait_for_gui_to_delete()
                         return
 
                     time.sleep(0.1)
@@ -191,6 +201,11 @@ class StockfishBot(multiprocess.Process):
                 previous_move_list = move_list
                 while True:
                     if self.grabber.is_game_over():
+                        # Send restart message to GUI
+                        if self.enable_non_stop_puzzles and self.grabber.is_game_puzzles():
+                            self.grabber.click_puzzle_next()
+                            self.pipe.send("RESTART")
+                            self.wait_for_gui_to_delete()
                         return
                     move_list = self.grabber.get_move_list()
                     if move_list is None:
@@ -204,6 +219,12 @@ class StockfishBot(multiprocess.Process):
                 board.push_san(move)
                 stockfish.make_moves_from_current_position([str(board.peek())])
                 if board.is_checkmate():
+                    # Send restart message to GUI
+                    if self.enable_non_stop_puzzles and self.grabber.is_game_puzzles():
+                        self.grabber.click_puzzle_next()
+                        self.pipe.send("RESTART")
+                        self.wait_for_gui_to_delete()
+
                     return
         except Exception as e:
             print(e)

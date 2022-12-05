@@ -130,3 +130,9 @@ class ChesscomGrabber(Grabber):
                                 moves_list.append(figure + move.text)
 
         return moves_list
+
+    def is_game_puzzles(self) -> bool:
+        return False
+
+    def click_puzzle_next(self) -> None:
+        pass

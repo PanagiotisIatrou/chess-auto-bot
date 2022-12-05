@@ -31,6 +31,7 @@ class GUI:
 
         # The Stockfish Bot process
         self.stockfish_bot_process = None
+        self.restart_after_stopping = False
 
         # Used for storing the match moves
         self.match_moves = []
@@ -75,6 +76,11 @@ class GUI:
         self.start_button = tk.Button(left_frame, text="Start", command=self.on_start_button_listener)
         self.start_button["state"] = "disabled"
         self.start_button.pack(anchor=tk.NW, pady=5)
+
+        # Create the non-stop puzzles check button
+        self.enable_non_stop_puzzles = tk.IntVar(value=0)
+        self.non_stop_puzzles_check_button = tk.Checkbutton(left_frame, text="Non-stop puzzles", variable=self.enable_non_stop_puzzles)
+        self.non_stop_puzzles_check_button.pack(anchor=tk.NW)
 
         # Create the bongcloud check button
         self.enable_bongcloud = tk.IntVar()
@@ -154,7 +160,7 @@ class GUI:
         treeview_frame = tk.Frame(right_frame)
 
         # Create the moves Treeview
-        self.tree = ttk.Treeview(treeview_frame, column=("#", "White", "Black"), show='headings', height=21, selectmode='browse')
+        self.tree = ttk.Treeview(treeview_frame, column=("#", "White", "Black"), show='headings', height=23, selectmode='browse')
         self.tree.pack(anchor=tk.NW, side=tk.LEFT)
 
         # # Add the scrollbar to the Treeview
@@ -205,6 +211,11 @@ class GUI:
                     self.stockfish_bot_pipe.close()
                 self.stockfish_bot_pipe = None
                 self.on_stop_button_listener()
+
+                # Restart the process if restart_after_stopping is True
+                if self.restart_after_stopping:
+                    self.restart_after_stopping = False
+                    self.on_start_button_listener()
             time.sleep(0.1)
 
     # Detects if Selenium Chromedriver is running
@@ -257,6 +268,9 @@ class GUI:
                         self.start_button["state"] = "normal"
                         self.start_button["command"] = self.on_stop_button_listener
                         self.start_button.update()
+                    elif data[:7] == "RESTART":
+                        self.restart_after_stopping = True
+                        self.stockfish_bot_pipe.send("DELETE")
                     elif data[:6] == "S_MOVE":
                         move = data[6:]
                         self.match_moves.append(move)
@@ -346,7 +360,7 @@ class GUI:
         self.stockfish_bot_pipe = parent_conn
 
         # Create the Stockfish Bot process
-        self.stockfish_bot_process = StockfishBot(self.chrome_url, self.chrome_session_id, self.website.get(), child_conn, self.stockfish_path, self.enable_bongcloud.get() == 1, self.slow_mover.get(), self.skill_level.get(), self.memory.get(), self.cpu_threads.get())
+        self.stockfish_bot_process = StockfishBot(self.chrome_url, self.chrome_session_id, self.website.get(), child_conn, self.stockfish_path, self.enable_non_stop_puzzles.get() == 1, self.enable_bongcloud.get() == 1, self.slow_mover.get(), self.skill_level.get(), self.memory.get(), self.cpu_threads.get())
         self.stockfish_bot_process.start()
 
         # Update the run button

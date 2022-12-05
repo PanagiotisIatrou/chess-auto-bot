@@ -10,7 +10,8 @@ Note that the mouse is being moved by python
 
 ## How to install
 1) Clone the repository or just download the repository as a .zip
-2) Download Stockfish from https://stockfishchess.org/
+2) Download Stockfish from https://stockfishchess.org/  
+   **Note** that on Linux systems you must manually add execute permissions to the stockfish executable
 3) Open a Terminal
 4) `cd chess-auto-bot`
 5) Windows: `python -m venv venv`  
@@ -30,19 +31,19 @@ Note that the mouse is being moved by python
 8) Enjoy
 
 ## Currently supports
-- Windows/Linux platforms
-- Chess.com
-- Lichess.org
-- Playing vs humans
-- Playing vs bots
-- Lichess puzzles
-- Bongcloud mode ( ͡° ͜ʖ ͡° )
-- Skill level selection (0-20)
-- Memory (RAM) usage selection
-- CPU threads number selection
-- Slow Mover option (defaults to 100, 10 &le; Slow Mover &le; 1000)  
+- [x] Windows/Linux platforms
+- [x] Chess.com
+- [x] Lichess.org
+- [x] Playing vs humans
+- [x] Playing vs bots
+- [x] Lichess puzzles (with option for non-stop solving)
+- [x] Bongcloud mode ( ͡° ͜ʖ ͡° )
+- [x] Skill level selection (0-20)
+- [x] Memory (RAM) usage selection
+- [x] CPU threads number selection
+- [x] Slow Mover option (defaults to 100, 10 &le; Slow Mover &le; 1000)  
   lower values will make Stockfish take less time in games, higher values will make it think longer
-- Exporting finished games to PGN
+- [x] Exporting finished games to PGN
 
 ## Disclaimer
 Under no circumstances should you use this bot to cheat in online games or tournaments. This bot was made for educational purposes only.

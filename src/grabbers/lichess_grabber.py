@@ -1,3 +1,5 @@
+import re
+
 from selenium.common import NoSuchElementException
 from selenium.webdriver.common.by import By
 
@@ -77,5 +79,28 @@ class LichessGrabber(Grabber):
         except NoSuchElementException:
             return None
 
-        moves_list = [move.text for move in children]
+        # Get the moves from the lines
+        moves_list = []
+        for move in children:
+            # Sanitize the move
+            move = re.sub(r"[^a-zA-Z0-9+-]", "", move.text)
+            moves_list.append(move)
         return moves_list
+
+    def is_game_puzzles(self) -> bool:
+        try:
+            # Try finding the puzzles text
+            self.chrome.find_element(By.XPATH, "/html/body/div[2]/main/aside/div[1]/div[1]/div/p[1]")
+            return True
+        except NoSuchElementException:
+            return False
+
+    def click_puzzle_next(self) -> None:
+        # Find the next continue training button
+        try:
+            next_button = self.chrome.find_element(By.XPATH, "/html/body/div[2]/main/div[2]/div[3]/a")
+        except NoSuchElementException:
+            return
+
+        # Click the continue training button
+        self.chrome.execute_script("arguments[0].click();", next_button)
