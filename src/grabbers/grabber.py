@@ -26,7 +26,7 @@ class Grabber(ABC):
     # Returns True if white, False if black,
     # None if the color is not found
     @abstractmethod
-    def is_white(self) -> bool | None:
+    def is_white(self):
         pass
 
     # Checks if the game over window popup is open
@@ -44,10 +44,10 @@ class Grabber(ABC):
     # Returns True if the player does puzzles
     # and False if not
     @abstractmethod
-    def is_game_puzzles(self) -> bool:
+    def is_game_puzzles(self):
         pass
 
     # Clicks the next button on the puzzles page
     @abstractmethod
-    def click_puzzle_next(self) -> None:
+    def click_puzzle_next(self):
         pass

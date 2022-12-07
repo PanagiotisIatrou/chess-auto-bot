@@ -17,7 +17,7 @@ class ChesscomGrabber(Grabber):
             except NoSuchElementException:
                 self._board_elem = None
 
-    def is_white(self) -> bool | None:
+    def is_white(self):
         # Find the square names list
         square_names = None
         try:
@@ -131,8 +131,8 @@ class ChesscomGrabber(Grabber):
 
         return moves_list
 
-    def is_game_puzzles(self) -> bool:
+    def is_game_puzzles(self):
         return False
 
-    def click_puzzle_next(self) -> None:
+    def click_puzzle_next(self):
         pass
