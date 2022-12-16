@@ -27,8 +27,10 @@ Note that the mouse is being moved by python
 4) Click Select Stockfish on the GUI that opens. This will open a file explorer. Navigate to the folder where you downloaded Stockfish and select the Stockfish executable.
 5) Click Open Browser. This will open ChromeDriver and load the selected chess website.
 6) Navigate to a live match (online or vs bot)
-7) Click Start
-8) Enjoy
+7) Click Start (or press 1)
+8) Enjoy  
+
+**Note** You can stop the bot at any time by pressing Stop or pressing 2.
 
 ## Currently supports
 - [x] Windows/Linux platforms
@@ -37,6 +39,7 @@ Note that the mouse is being moved by python
 - [x] Playing vs humans
 - [x] Playing vs bots
 - [x] Lichess puzzles (with option for non-stop solving)
+- [x] Manual mode (Press or hold 3 to move when enabled)
 - [x] Bongcloud mode ( ͡° ͜ʖ ͡° )
 - [x] Skill level selection (0-20)
 - [x] Memory (RAM) usage selection
