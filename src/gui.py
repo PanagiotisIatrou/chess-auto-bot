@@ -85,12 +85,8 @@ class GUI:
 
         # Create the manual mode instructions
         self.manual_mode_frame = tk.Frame(left_frame)
-        self.manual_mode_label1 = tk.Label(self.manual_mode_frame, text="\u2022 Press 1 to start")
-        self.manual_mode_label1.pack(anchor=tk.NW)
-        self.manual_mode_label2 = tk.Label(self.manual_mode_frame, text="\u2022 Press 2 to stop")
-        self.manual_mode_label2.pack(anchor=tk.NW)
-        self.manual_mode_label3 = tk.Label(self.manual_mode_frame, text="\u2022 Press 3 to make a move")
-        self.manual_mode_label3.pack(anchor=tk.NW)
+        self.manual_mode_label = tk.Label(self.manual_mode_frame, text="\u2022 Press 3 to make a move")
+        self.manual_mode_label.pack(anchor=tk.NW)
 
         # Create the non-stop puzzles check button
         self.enable_non_stop_puzzles = tk.IntVar(value=0)
