@@ -8,6 +8,7 @@ from selenium.webdriver.chrome.service import Service
 from webdriver_manager.chrome import ChromeDriverManager
 from stockfish_bot import StockfishBot
 from selenium.common import WebDriverException
+import keyboard
 
 
 class GUI:
@@ -77,6 +78,20 @@ class GUI:
         self.start_button["state"] = "disabled"
         self.start_button.pack(anchor=tk.NW, pady=5)
 
+        # Create the manual mode checkbox
+        self.enable_manual_mode = tk.BooleanVar(value=False)
+        self.manual_mode_checkbox = tk.Checkbutton(left_frame, text="Manual Mode", variable=self.enable_manual_mode, command=self.on_manual_mode_checkbox_listener)
+        self.manual_mode_checkbox.pack(anchor=tk.NW)
+
+        # Create the manual mode instructions
+        self.manual_mode_frame = tk.Frame(left_frame)
+        self.manual_mode_label1 = tk.Label(self.manual_mode_frame, text="\u2022 Press 1 to start")
+        self.manual_mode_label1.pack(anchor=tk.NW)
+        self.manual_mode_label2 = tk.Label(self.manual_mode_frame, text="\u2022 Press 2 to stop")
+        self.manual_mode_label2.pack(anchor=tk.NW)
+        self.manual_mode_label3 = tk.Label(self.manual_mode_frame, text="\u2022 Press 3 to make a move")
+        self.manual_mode_label3.pack(anchor=tk.NW)
+
         # Create the non-stop puzzles check button
         self.enable_non_stop_puzzles = tk.IntVar(value=0)
         self.non_stop_puzzles_check_button = tk.Checkbutton(left_frame, text="Non-stop puzzles", variable=self.enable_non_stop_puzzles)
@@ -119,7 +134,7 @@ class GUI:
         self.memory_entry = tk.Entry(memory_frame, textvariable=self.memory, justify="center", width=9)
         self.memory_entry.pack(side=tk.LEFT)
         tk.Label(memory_frame, text="MB").pack()
-        memory_frame.pack(anchor=tk.NW, pady=(0,15))
+        memory_frame.pack(anchor=tk.NW, pady=(0, 15))
 
         # Create the CPU threads entry field
         cpu_threads_frame = tk.Frame(left_frame)
@@ -195,6 +210,10 @@ class GUI:
         # Start the process communicator thread
         process_communicator_thread = threading.Thread(target=self.process_communicator_thread)
         process_communicator_thread.start()
+
+        # Start the keyboard listener thread
+        keyboard_listener_thread = threading.Thread(target=self.keypress_listener_thread)
+        keyboard_listener_thread.start()
 
     # Detects if the user pressed the close button
     def on_close_listener(self):
@@ -298,6 +317,17 @@ class GUI:
 
             time.sleep(0.1)
 
+    def keypress_listener_thread(self):
+        while not self.exit:
+            time.sleep(0.1)
+            if not self.opened_browser:
+                continue
+
+            if keyboard.is_pressed("1"):
+                self.on_start_button_listener()
+            elif keyboard.is_pressed("2"):
+                self.on_stop_button_listener()
+
     def on_open_browser_button_listener(self):
         # Set Opening Browser button state to opening
         self.opening_browser = True
@@ -360,7 +390,8 @@ class GUI:
         self.stockfish_bot_pipe = parent_conn
 
         # Create the Stockfish Bot process
-        self.stockfish_bot_process = StockfishBot(self.chrome_url, self.chrome_session_id, self.website.get(), child_conn, self.stockfish_path, self.enable_non_stop_puzzles.get() == 1, self.enable_bongcloud.get() == 1, self.slow_mover.get(), self.skill_level.get(), self.memory.get(), self.cpu_threads.get())
+        self.stockfish_bot_process = StockfishBot(self.chrome_url, self.chrome_session_id, self.website.get(), child_conn, self.stockfish_path, self.enable_manual_mode.get() == 1, self.enable_non_stop_puzzles.get() == 1,
+                                                  self.enable_bongcloud.get() == 1, self.slow_mover.get(), self.skill_level.get(), self.memory.get(), self.cpu_threads.get())
         self.stockfish_bot_process.start()
 
         # Update the run button
@@ -456,6 +487,14 @@ class GUI:
             self.tree.insert('', 'end', text="1", values=(len(pairs) + 1, moves[-1]))
 
         self.tree.update()
+
+    def on_manual_mode_checkbox_listener(self):
+        if self.enable_manual_mode.get() == 1:
+            self.manual_mode_frame.pack(after=self.manual_mode_checkbox)
+            self.manual_mode_frame.update()
+        else:
+            self.manual_mode_frame.pack_forget()
+            self.manual_mode_checkbox.update()
 
 
 if __name__ == '__main__':

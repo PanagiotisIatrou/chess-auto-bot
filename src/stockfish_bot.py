@@ -9,10 +9,11 @@ import re
 from grabbers.chesscom_grabber import ChesscomGrabber
 from grabbers.lichess_grabber import LichessGrabber
 from utilities import char_to_num
+import keyboard
 
 
 class StockfishBot(multiprocess.Process):
-    def __init__(self, chrome_url, chrome_session_id, website, pipe, stockfish_path, enable_non_stop_puzzles, bongcloud, slow_mover, skill_level, memory, cpu_threads):
+    def __init__(self, chrome_url, chrome_session_id, website, pipe, stockfish_path, enable_manual_mode, enable_non_stop_puzzles, bongcloud, slow_mover, skill_level, memory, cpu_threads):
         multiprocess.Process.__init__(self)
 
         self.chrome_url = chrome_url
@@ -20,6 +21,7 @@ class StockfishBot(multiprocess.Process):
         self.website = website
         self.pipe = pipe
         self.stockfish_path = stockfish_path
+        self.enable_manual_mode = enable_manual_mode
         self.enable_non_stop_puzzles = enable_non_stop_puzzles
         self.bongcloud = bongcloud
         self.slow_mover = slow_mover
@@ -55,6 +57,10 @@ class StockfishBot(multiprocess.Process):
         return x, y
 
     def make_move(self, move):
+        # Wait for keypress if in manual mode
+        if self.enable_manual_mode:
+            keyboard.wait("3")
+
         # Get the start and end position screen coordinates
         start_pos_x, start_pos_y = self.move_to_screen_pos(move[0:2])
         end_pos_x, end_pos_y = self.move_to_screen_pos(move[2:4])
