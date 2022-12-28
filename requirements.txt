@@ -6,3 +6,4 @@ chess~=1.9.3
 stockfish~=3.28.0
 packaging~=21.3
 keyboard~=0.13.5
+PyQt5~=5.15.7

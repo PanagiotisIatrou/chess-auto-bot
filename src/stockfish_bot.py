@@ -1,3 +1,5 @@
+from random import random
+
 import multiprocess
 from stockfish import Stockfish
 import pyautogui
@@ -13,13 +15,14 @@ import keyboard
 
 
 class StockfishBot(multiprocess.Process):
-    def __init__(self, chrome_url, chrome_session_id, website, pipe, stockfish_path, enable_manual_mode, enable_non_stop_puzzles, bongcloud, slow_mover, skill_level, memory, cpu_threads):
+    def __init__(self, chrome_url, chrome_session_id, website, pipe, overlay_queue, stockfish_path, enable_manual_mode, enable_non_stop_puzzles, bongcloud, slow_mover, skill_level, memory, cpu_threads):
         multiprocess.Process.__init__(self)
 
         self.chrome_url = chrome_url
         self.chrome_session_id = chrome_session_id
         self.website = website
         self.pipe = pipe
+        self.overlay_queue = overlay_queue
         self.stockfish_path = stockfish_path
         self.enable_manual_mode = enable_manual_mode
         self.enable_non_stop_puzzles = enable_non_stop_puzzles
@@ -45,8 +48,6 @@ class StockfishBot(multiprocess.Process):
         square_size = self.grabber.get_board().size['width'] / 8
 
         # Depending on the player color, the board is flipped, so the coordinates need to be adjusted
-        x = None
-        y = None
         if self.is_white:
             x = board_x + square_size * (char_to_num(move[0]) - 1) + square_size / 2
             y = board_y + square_size * (8 - int(move[1])) + square_size / 2
@@ -56,20 +57,21 @@ class StockfishBot(multiprocess.Process):
 
         return x, y
 
-    def make_move(self, move):
-        # Wait for keypress if in manual mode
-        if self.enable_manual_mode:
-            keyboard.wait("3")
-
+    def get_move_pos(self, move):
         # Get the start and end position screen coordinates
         start_pos_x, start_pos_y = self.move_to_screen_pos(move[0:2])
         end_pos_x, end_pos_y = self.move_to_screen_pos(move[2:4])
 
-        # Move mouse to start position
-        pyautogui.moveTo(start_pos_x, start_pos_y)
+        return (start_pos_x, start_pos_y), (end_pos_x, end_pos_y)
 
-        # Click on start position and drag to end position
-        pyautogui.dragTo(end_pos_x, end_pos_y, button='left')
+
+    def make_move(self, move):
+        # Get the start and end position screen coordinates
+        start_pos, end_pos = self.get_move_pos(move)
+
+        # Drag the piece from the start to the end position
+        pyautogui.moveTo(start_pos[0], start_pos[1])
+        pyautogui.dragTo(end_pos[0], end_pos[1])
 
         # Check for promotion. If there is a promotion,
         # promote to the corresponding piece type
@@ -179,13 +181,35 @@ class StockfishBot(multiprocess.Process):
                             move = stockfish.get_best_move()
                     else:
                         move = stockfish.get_best_move()
-                    move_san = board.san(chess.Move(chess.parse_square(move[0:2]), chess.parse_square(move[2:4])))
 
-                    # Make the move
-                    board.push_uci(move)
-                    stockfish.make_moves_from_current_position([move])
-                    move_list.append(move_san)
-                    self.make_move(move)
+                    # Wait for keypress or player movement if in manual mode
+                    self_moved = False
+                    if self.enable_manual_mode:
+                        move_start_pos, move_end_pos = self.get_move_pos(move)
+                        self.overlay_queue.put([
+                            ((int(move_start_pos[0]), int(move_start_pos[1])), (int(move_end_pos[0]), int(move_end_pos[1]))),
+                        ])
+                        while True:
+                            if keyboard.is_pressed("3"):
+                                break
+
+                            if len(move_list) != len(self.grabber.get_move_list()):
+                                self_moved = True
+                                move_list = self.grabber.get_move_list()
+                                move_san = move_list[-1]
+                                move = board.parse_san(move_san).uci()
+                                board.push_uci(move)
+                                stockfish.make_moves_from_current_position([move])
+                                break
+
+                    if not self_moved:
+                        move_san = board.san(chess.Move(chess.parse_square(move[0:2]), chess.parse_square(move[2:4])))
+                        board.push_uci(move)
+                        stockfish.make_moves_from_current_position([move])
+                        move_list.append(move_san)
+                        self.make_move(move)
+
+                    self.overlay_queue.put([])
 
                     # Send the move to the GUI
                     self.pipe.send("S_MOVE" + move_san)

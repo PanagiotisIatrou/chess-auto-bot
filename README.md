@@ -39,7 +39,8 @@ Note that the mouse is being moved by python
 - [x] Playing vs humans
 - [x] Playing vs bots
 - [x] Lichess puzzles (with option for non-stop solving)
-- [x] Manual mode (Press or hold 3 to move when enabled)
+- [x] Manual mode (Press or hold 3 to move when enabled)  
+  An arrow with the best move is also displayed
 - [x] Bongcloud mode ( ͡° ͜ʖ ͡° )
 - [x] Skill level selection (0-20)
 - [x] Memory (RAM) usage selection

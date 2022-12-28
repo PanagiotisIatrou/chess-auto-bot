@@ -1,3 +1,5 @@
+import multiprocessing
+
 import multiprocess
 import threading
 import time
@@ -6,6 +8,8 @@ from tkinter import ttk, filedialog
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
 from webdriver_manager.chrome import ChromeDriverManager
+
+from overlay import run
 from stockfish_bot import StockfishBot
 from selenium.common import WebDriverException
 import keyboard
@@ -29,9 +33,11 @@ class GUI:
         # Used for the communication between the GUI
         # and the Stockfish Bot process
         self.stockfish_bot_pipe = None
+        self.overlay_screen_pipe = None
 
         # The Stockfish Bot process
         self.stockfish_bot_process = None
+        self.overlay_screen_process = None
         self.restart_after_stopping = False
 
         # Used for storing the match moves
@@ -221,10 +227,6 @@ class GUI:
     def process_checker_thread(self):
         while not self.exit:
             if self.running and self.stockfish_bot_process is not None and not self.stockfish_bot_process.is_alive():
-                self.stockfish_bot_process = None
-                if self.stockfish_bot_pipe is not None:
-                    self.stockfish_bot_pipe.close()
-                self.stockfish_bot_pipe = None
                 self.on_stop_button_listener()
 
                 # Restart the process if restart_after_stopping is True
@@ -385,10 +387,18 @@ class GUI:
         parent_conn, child_conn = multiprocess.Pipe()
         self.stockfish_bot_pipe = parent_conn
 
+        # Create the message queue that is used for the communication
+        # between the Stockfish and the Overlay processes
+        st_ov_queue = multiprocess.Queue()
+
         # Create the Stockfish Bot process
-        self.stockfish_bot_process = StockfishBot(self.chrome_url, self.chrome_session_id, self.website.get(), child_conn, self.stockfish_path, self.enable_manual_mode.get() == 1, self.enable_non_stop_puzzles.get() == 1,
+        self.stockfish_bot_process = StockfishBot(self.chrome_url, self.chrome_session_id, self.website.get(), child_conn, st_ov_queue, self.stockfish_path, self.enable_manual_mode.get() == 1, self.enable_non_stop_puzzles.get() == 1,
                                                   self.enable_bongcloud.get() == 1, self.slow_mover.get(), self.skill_level.get(), self.memory.get(), self.cpu_threads.get())
         self.stockfish_bot_process.start()
+
+        # Create the overlay
+        self.overlay_screen_process = multiprocess.Process(target=run, args=(st_ov_queue,))
+        self.overlay_screen_process.start()
 
         # Update the run button
         self.running = True
@@ -406,6 +416,16 @@ class GUI:
         if self.stockfish_bot_pipe is not None:
             self.stockfish_bot_pipe.close()
             self.stockfish_bot_pipe = None
+
+        # Stop the overlay
+        if self.overlay_screen_process is not None:
+            self.overlay_screen_process.kill()
+            self.overlay_screen_process = None
+
+        # Close the overlay pipe
+        if self.overlay_screen_pipe is not None:
+            self.overlay_screen_pipe.close()
+            self.overlay_screen_pipe = None
 
         # Update the status text
         self.running = False
