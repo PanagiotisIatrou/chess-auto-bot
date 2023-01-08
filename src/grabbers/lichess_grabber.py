@@ -73,7 +73,7 @@ class LichessGrabber(Grabber):
         children = None
         try:
             if not puzzles:
-                children = move_list_elem.find_elements(By.TAG_NAME, "u8t")
+                children = move_list_elem.find_elements(By.TAG_NAME, "xau")
             else:
                 children = move_list_elem.find_elements(By.TAG_NAME, "move")
         except NoSuchElementException:
