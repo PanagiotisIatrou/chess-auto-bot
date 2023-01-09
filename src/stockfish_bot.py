@@ -208,7 +208,10 @@ class StockfishBot(multiprocess.Process):
                         stockfish.make_moves_from_current_position([move])
                         move_list.append(move_san)
                         self.grabber.ws_execute_move(move, move_count + 1)
-                        # self.make_move(move)
+                        if self.website == "lichess":
+                            self.grabber.ws_execute_move(move, move_count + 1)
+                        else:
+                            self.make_move(move)
 
                     self.overlay_queue.put([])
 
