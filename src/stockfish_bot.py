@@ -207,7 +207,7 @@ class StockfishBot(multiprocess.Process):
                         board.push_uci(move)
                         stockfish.make_moves_from_current_position([move])
                         move_list.append(move_san)
-                        if self.website == "lichess":
+                        if self.website == "lichess" and not self.grabber.is_game_puzzles():
                             self.grabber.ws_execute_move(move, move_count + 1)
                         else:
                             self.make_move(move)
