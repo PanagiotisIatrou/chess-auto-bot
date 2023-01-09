@@ -33,44 +33,48 @@ class LichessGrabber(Grabber):
     def is_game_over(self):
         try:
             # Find the game over window
-            game_over_window = self.chrome.find_element(By.XPATH, '//*[@id="main-wrap"]/main/aside/div/section[2]')
-            if game_over_window is not None:
-                return True
-            else:
-                return False
+            self.chrome.find_element(By.XPATH, '//*[@id="main-wrap"]/main/aside/div/section[2]')
+
+            # If we don't have an exception at this point, we have found the game over window
+            return True
         except NoSuchElementException:
-            # Try finding the puzzles game over window
+            # Try finding the puzzles game over window and checking its class
             try:
+                # The game over window
                 game_over_window = self.chrome.find_element(By.XPATH, '/html/body/div[2]/main/div[2]/div[3]/div[1]')
-                if game_over_window is not None and game_over_window.text == "Success!":
+
+                if game_over_window.get_attribute("class") == "complete":
                     return True
-                else:
-                    return False
+
+                # If we don't have an exception at this point and the window's class is not "complete",
+                # then the game is still going
+                return False
             except NoSuchElementException:
                 return False
 
     def get_move_list(self):
-        # Find the moves list
-        move_list_elem = None
-        puzzles = False
-        try:
-            # Try finding the normal move list
-            move_list_elem = self.chrome.find_element(By.XPATH, '//*[@id="main-wrap"]/main/div[1]/rm6/l4x')
-        except NoSuchElementException:
+        puzzles = self.is_game_puzzles()
+
+        if puzzles:
             try:
-                move_list_elem = self.chrome.find_element(By.XPATH, '//*[@id="main-wrap"]/main/div[1]/rm6')
-                if move_list_elem is not None:
-                    return []
+                # Try finding the move list in the puzzles page
+                move_list_elem = self.chrome.find_element(By.XPATH, '/html/body/div[2]/main/div[2]/div[2]/div')
+            except NoSuchElementException:
+                return None
+        else:
+            try:
+                # Try finding the normal move list
+                move_list_elem = self.chrome.find_element(By.XPATH, '//*[@id="main-wrap"]/main/div[1]/rm6/l4x')
             except NoSuchElementException:
                 try:
-                    # Try finding the move list in the puzzles page
-                    move_list_elem = self.chrome.find_element(By.XPATH, '/html/body/div[2]/main/div[2]/div[2]/div')
-                    puzzles = True
+                    # Try finding the normal move list when there are no moves yet
+                    self.chrome.find_element(By.XPATH, '//*[@id="main-wrap"]/main/div[1]/rm6')
+
+                    # If we don't have an exception at this point, we don't have any moves yet
+                    return []
                 except NoSuchElementException:
                     return None
 
-        # Get a list with all the lines with the moves
-        children = None
         try:
             if not puzzles:
                 children = move_list_elem.find_elements(By.TAG_NAME, "xau")
@@ -91,6 +95,8 @@ class LichessGrabber(Grabber):
         try:
             # Try finding the puzzles text
             self.chrome.find_element(By.XPATH, "/html/body/div[2]/main/aside/div[1]/div[1]/div/p[1]")
+
+            # If we don't have an exception at this point, the game is a puzzle
             return True
         except NoSuchElementException:
             return False
@@ -100,7 +106,10 @@ class LichessGrabber(Grabber):
         try:
             next_button = self.chrome.find_element(By.XPATH, "/html/body/div[2]/main/div[2]/div[3]/a")
         except NoSuchElementException:
-            return
+            try:
+                next_button = self.chrome.find_element(By.XPATH, '//*[@id="main-wrap"]/main/div[2]/div[3]/div[3]/a[2]')
+            except NoSuchElementException:
+                return
 
         # Click the continue training button
         self.chrome.execute_script("arguments[0].click();", next_button)
