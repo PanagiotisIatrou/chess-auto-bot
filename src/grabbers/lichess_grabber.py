@@ -104,3 +104,8 @@ class LichessGrabber(Grabber):
 
         # Click the continue training button
         self.chrome.execute_script("arguments[0].click();", next_button)
+
+    def ws_execute_move(self, move):
+        message = '{"t":"move","d":{"u":"' + move + '","b":1,"a":' + move_count + '}}'
+        script = 'lichess.socket.ws.send(JSON.stringify(' + message + '))'
+        self.chrome.execute_script(script)
