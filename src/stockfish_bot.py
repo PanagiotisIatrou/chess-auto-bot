@@ -15,7 +15,7 @@ import keyboard
 
 
 class StockfishBot(multiprocess.Process):
-    def __init__(self, chrome_url, chrome_session_id, website, pipe, overlay_queue, stockfish_path, enable_manual_mode, enable_non_stop_puzzles, bongcloud, slow_mover, skill_level, memory, cpu_threads):
+    def __init__(self, chrome_url, chrome_session_id, website, pipe, overlay_queue, stockfish_path, enable_manual_mode, enable_non_stop_puzzles, bongcloud, slow_mover, skill_level, stockfish_depth, memory, cpu_threads):
         multiprocess.Process.__init__(self)
 
         self.chrome_url = chrome_url
@@ -29,6 +29,7 @@ class StockfishBot(multiprocess.Process):
         self.bongcloud = bongcloud
         self.slow_mover = slow_mover
         self.skill_level = skill_level
+        self.stockfish_depth = stockfish_depth
         self.grabber = None
         self.memory = memory
         self.cpu_threads = cpu_threads
@@ -108,7 +109,7 @@ class StockfishBot(multiprocess.Process):
             "Skill Level": self.skill_level
         }
         try:
-            stockfish = Stockfish(path=self.stockfish_path, parameters=parameters)
+            stockfish = Stockfish(path=self.stockfish_path, depth=self.stockfish_depth, parameters=parameters)
         except PermissionError:
             self.pipe.send("ERR_PERM")
             return

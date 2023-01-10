@@ -129,6 +129,15 @@ class GUI:
         self.skill_level_scale.pack()
         skill_level_frame.pack(anchor=tk.NW)
 
+        # Create the Stockfish depth scale
+        stockfish_depth_frame = tk.Frame(left_frame)
+        tk.Label(stockfish_depth_frame, text="Depth").pack(side=tk.LEFT, pady=19)
+        self.stockfish_depth = tk.IntVar(value=15)
+        self.stockfish_depth_scale = tk.Scale(stockfish_depth_frame, from_=1, to=20, orient=tk.HORIZONTAL,
+                                              variable=self.stockfish_depth)
+        self.stockfish_depth_scale.pack()
+        stockfish_depth_frame.pack(anchor=tk.NW)
+
         # Create the memory entry field
         memory_frame = tk.Frame(left_frame)
         tk.Label(memory_frame, text="Memory").pack(side=tk.LEFT)
@@ -393,7 +402,7 @@ class GUI:
 
         # Create the Stockfish Bot process
         self.stockfish_bot_process = StockfishBot(self.chrome_url, self.chrome_session_id, self.website.get(), child_conn, st_ov_queue, self.stockfish_path, self.enable_manual_mode.get() == 1, self.enable_non_stop_puzzles.get() == 1,
-                                                  self.enable_bongcloud.get() == 1, self.slow_mover.get(), self.skill_level.get(), self.memory.get(), self.cpu_threads.get())
+                                                  self.enable_bongcloud.get() == 1, self.slow_mover.get(), self.skill_level.get(), self.stockfish_depth.get(), self.memory.get(), self.cpu_threads.get())
         self.stockfish_bot_process.start()
 
         # Create the overlay
