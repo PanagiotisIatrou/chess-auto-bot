@@ -60,18 +60,13 @@ class LichessGrabber(Grabber):
 
         move_list_elem = self.get_normal_move_list_elem()
 
-        if move_list_elem is None or not move_list_elem:
+        if move_list_elem is None or move_list_elem == []:
             return False
 
         try:
             last_child = move_list_elem.find_element(By.XPATH, "*[last()]")
-            tag = last_child.tag_name
+            self.tag_name = last_child.tag_name
 
-            # If the tag is div then the game has not started yet
-            if tag == "div":
-                return False
-
-            self.tag_name = tag
             return True
         except NoSuchElementException:
             return False
@@ -129,10 +124,10 @@ class LichessGrabber(Grabber):
         except NoSuchElementException:
             try:
                 # Try finding the normal move list when there are no moves yet
-                move_list_elem = self.chrome.find_element(By.XPATH, '//*[@id="main-wrap"]/main/div[1]/rm6')
+                self.chrome.find_element(By.XPATH, '//*[@id="main-wrap"]/main/div[1]/rm6')
 
                 # If we don't have an exception at this point, we don't have any moves yet
-                return move_list_elem
+                return []
             except NoSuchElementException:
                 return None
 
