@@ -52,32 +52,44 @@ class LichessGrabber(Grabber):
             except NoSuchElementException:
                 return False
 
+    def set_moves_tag_name(self):
+        if self.is_game_puzzles():
+            return False
+
+        move_list_elem = self.get_normal_move_list_elem()
+
+        if move_list_elem is None:
+            return False
+        if not move_list_elem:
+            return False
+
+        try:
+            last_child = move_list_elem.find_elements(By.XPATH, "*[last()]")
+            self.tag_name = last_child[0].tag_name
+
+            return True
+        except NoSuchElementException:
+            return False
+
     def get_move_list(self):
         puzzles = self.is_game_puzzles()
 
         if puzzles:
-            try:
-                # Try finding the move list in the puzzles page
-                move_list_elem = self.chrome.find_element(By.XPATH, '/html/body/div[2]/main/div[2]/div[2]/div')
-            except NoSuchElementException:
+            move_list_elem = self.get_puzzles_move_list_elem()
+
+            if move_list_elem is None:
                 return None
         else:
-            try:
-                # Try finding the normal move list
-                move_list_elem = self.chrome.find_element(By.XPATH, '//*[@id="main-wrap"]/main/div[1]/rm6/l4x')
-            except NoSuchElementException:
-                try:
-                    # Try finding the normal move list when there are no moves yet
-                    self.chrome.find_element(By.XPATH, '//*[@id="main-wrap"]/main/div[1]/rm6')
+            move_list_elem = self.get_normal_move_list_elem()
 
-                    # If we don't have an exception at this point, we don't have any moves yet
-                    return []
-                except NoSuchElementException:
-                    return None
+            if move_list_elem is None:
+                return None
+            if (not move_list_elem) or (self.tag_name is None and self.set_moves_tag_name() is False):
+                return []
 
         try:
             if not puzzles:
-                children = move_list_elem.find_elements(By.TAG_NAME, "xau")
+                children = move_list_elem.find_elements(By.TAG_NAME, self.tag_name)
             else:
                 children = move_list_elem.find_elements(By.TAG_NAME, "move")
         except NoSuchElementException:
@@ -90,6 +102,31 @@ class LichessGrabber(Grabber):
             move = re.sub(r"[^a-zA-Z0-9+-]", "", move.text)
             moves_list.append(move)
         return moves_list
+
+    def get_puzzles_move_list_elem(self):
+        try:
+            # Try finding the move list in the puzzles page
+            move_list_elem = self.chrome.find_element(By.XPATH, '/html/body/div[2]/main/div[2]/div[2]/div')
+
+            return move_list_elem
+        except NoSuchElementException:
+            return None
+
+    def get_normal_move_list_elem(self):
+        try:
+            # Try finding the normal move list
+            move_list_elem = self.chrome.find_element(By.XPATH, '//*[@id="main-wrap"]/main/div[1]/rm6/l4x')
+
+            return move_list_elem
+        except NoSuchElementException:
+            try:
+                # Try finding the normal move list when there are no moves yet
+                self.chrome.find_element(By.XPATH, '//*[@id="main-wrap"]/main/div[1]/rm6')
+
+                # If we don't have an exception at this point, we don't have any moves yet
+                return []
+            except NoSuchElementException:
+                return None
 
     def is_game_puzzles(self):
         try:
