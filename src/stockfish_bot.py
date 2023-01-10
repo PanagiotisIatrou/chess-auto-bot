@@ -15,7 +15,7 @@ import keyboard
 
 
 class StockfishBot(multiprocess.Process):
-    def __init__(self, chrome_url, chrome_session_id, website, pipe, overlay_queue, stockfish_path, enable_manual_mode, enable_non_stop_puzzles, bongcloud, slow_mover, skill_level, stockfish_depth, memory, cpu_threads):
+    def __init__(self, chrome_url, chrome_session_id, website, pipe, overlay_queue, stockfish_path, enable_manual_mode, enable_mouseless_mode, enable_non_stop_puzzles, bongcloud, slow_mover, skill_level, stockfish_depth, memory, cpu_threads):
         multiprocess.Process.__init__(self)
 
         self.chrome_url = chrome_url
@@ -25,6 +25,7 @@ class StockfishBot(multiprocess.Process):
         self.overlay_queue = overlay_queue
         self.stockfish_path = stockfish_path
         self.enable_manual_mode = enable_manual_mode
+        self.enable_mouseless_mode = enable_mouseless_mode
         self.enable_non_stop_puzzles = enable_non_stop_puzzles
         self.bongcloud = bongcloud
         self.slow_mover = slow_mover
@@ -208,8 +209,8 @@ class StockfishBot(multiprocess.Process):
                         board.push_uci(move)
                         stockfish.make_moves_from_current_position([move])
                         move_list.append(move_san)
-                        if self.website == "lichess" and not self.grabber.is_game_puzzles():
-                            self.grabber.ws_execute_move(move, move_count + 1)
+                        if self.enable_mouseless_mode and not self.grabber.is_game_puzzles():
+                            self.grabber.make_mouseless_move(move, move_count + 1)
                         else:
                             self.make_move(move)
 
