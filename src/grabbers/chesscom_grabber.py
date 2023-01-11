@@ -7,6 +7,7 @@ from grabbers.grabber import Grabber
 class ChesscomGrabber(Grabber):
     def __init__(self, chrome_url, chrome_session_id):
         super().__init__(chrome_url, chrome_session_id)
+        self.moves_list = {}
 
     def update_board_elem(self):
         try:
@@ -65,71 +66,57 @@ class ChesscomGrabber(Grabber):
             return False
 
     def get_move_list(self):
-        # Move lines in bot games have different
-        # structure than online games
-        vs_bot = False
-
         # Find the moves list
-        move_list_elem = None
         try:
-            move_list_elem = self.chrome.find_element(By.XPATH, "/html/body/div[3]/div/vertical-move-list")
-            vs_bot = True
-        except NoSuchElementException:
-            try:
-                move_list_elem = self.chrome.find_element(By.XPATH, "//*[@id='move-list']/vertical-move-list")
-            except NoSuchElementException:
-                try:
-                    move_list_elem = self.chrome.find_element(By.XPATH, "/html/body/div[4]/div/vertical-move-list")
-                except NoSuchElementException:
-                    return None
-
-        # Get a list with all the lines with the moves
-        move_lines = None
-        try:
-            move_lines = move_list_elem.find_elements(By.XPATH, "./*")
+            move_list_elem = self.chrome.find_element(By.TAG_NAME, "vertical-move-list")
         except NoSuchElementException:
             return None
 
         # Select all children with class containing "white node" or "black node"
         # Moves that are not pawn moves have a different structure
         # containing children
+        if not self.moves_list:
+            # If the moves list is empty, find all moves
+            moves = move_list_elem.find_elements(By.CSS_SELECTOR, "div.move [data-ply]")
+        else:
+            # If the moves list is not empty, find only the new moves
+            moves = move_list_elem.find_elements(By.CSS_SELECTOR, "div.move [data-ply]:not([data-processed])")
 
-        moves_list = []
-        for move_line in move_lines:
-            moves = move_line.find_elements(By.XPATH, "./*")
-            for move in moves:
-                move_class = move.get_attribute("class")
+        for move in moves:
+            move_class = move.get_attribute("class")
 
-                # Check if it is indeed a move
-                if "white node" in move_class or "black node" in move_class:
-                    # Check if it has a figure
-                    child = None
-                    try:
-                        child = move.find_element(By.XPATH, "./*")
-                    except NoSuchElementException:
-                        child = None
+            # Check if it is indeed a move
+            if "white node" in move_class or "black node" in move_class:
+                # Check if it has a figure
+                try:
+                    child = move.find_element(By.XPATH, "./*")
+                    figure = child.get_attribute("data-figurine")
+                except NoSuchElementException:
+                    figure = None
 
-                    if child is None:
-                        moves_list.append(move.text)
+                # Check if it was en-passant or figure-move
+                if figure is None:
+                    # If the moves_list is empty or the last move was not the current move
+                    self.moves_list[move.get_attribute("data-ply")] = move.text
+                else:
+                    # Check if it is promotion
+                    if "=" in move.text:
+                        m = move.text + figure
+                        # If the move is a check, add the + in the end
+                        if "+" in m:
+                            m = m.replace("+", "")
+                            m += "+"
+
+                        # If the moves_list is empty or the last move was not the current move
+                        self.moves_list[move.get_attribute("data-ply")] = m
                     else:
-                        figure = child.get_attribute("data-figurine")
+                        # If the moves_list is empty or the last move was not the current move
+                        self.moves_list[move.get_attribute("data-ply")] = figure + move.text
 
-                        # Check if it was en-passant or figure-move
-                        if figure is None:
-                            moves_list.append(move.text)
-                        else:
-                            # Check if it is promotion
-                            if "=" in move.text:
-                                m = move.text + figure
-                                # If the move is a check, add the + in the end
-                                if "+" in m:
-                                    m = m.replace("+", "")
-                                    m += "+"
-                                moves_list.append(m)
-                            else:
-                                moves_list.append(figure + move.text)
+                # Mark the move as processed
+                self.chrome.execute_script("arguments[0].setAttribute('data-processed', 'true')", move)
 
-        return moves_list
+        return [val for val in self.moves_list.values()]
 
     def is_game_puzzles(self):
         return False

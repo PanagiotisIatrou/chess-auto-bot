@@ -233,7 +233,7 @@ class StockfishBot(multiprocess.Process):
                 # Wait for a response from the opponent
                 # by finding the differences between
                 # the previous and current position
-                previous_move_list = move_list
+                previous_move_list = move_list.copy()
                 while True:
                     if self.grabber.is_game_over():
                         # Send restart message to GUI

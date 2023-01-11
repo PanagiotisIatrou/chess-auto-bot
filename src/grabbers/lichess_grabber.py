@@ -10,6 +10,7 @@ class LichessGrabber(Grabber):
     def __init__(self, chrome_url, chrome_session_id):
         super().__init__(chrome_url, chrome_session_id)
         self.tag_name = None
+        self.moves_list = {}
 
     def update_board_elem(self):
         try:
@@ -91,20 +92,33 @@ class LichessGrabber(Grabber):
         # Get the move elements (children of the move list element)
         try:
             if not is_puzzles:
-                children = move_list_elem.find_elements(By.TAG_NAME, self.tag_name)
+                if not self.moves_list:
+                    # If the moves list is empty, find all moves
+                    children = move_list_elem.find_elements(By.CSS_SELECTOR, self.tag_name)
+                else:
+                    # If the moves list is not empty, find only the new moves
+                    children = move_list_elem.find_elements(By.CSS_SELECTOR, self.tag_name + ":not([data-processed])")
             else:
-                children = move_list_elem.find_elements(By.TAG_NAME, "move")
+                if not self.moves_list:
+                    # If the moves list is empty, find all moves
+                    children = move_list_elem.find_elements(By.CSS_SELECTOR, "move")
+                else:
+                    # If the moves list is not empty, find only the new moves
+                    children = move_list_elem.find_elements(By.CSS_SELECTOR, "move:not([data-processed])")
         except NoSuchElementException:
             return None
 
         # Get the moves from the elements
-        moves_list = []
         for move_element in children:
             # Sanitize the move
             move = re.sub(r"[^a-zA-Z0-9+-]", "", move_element.text)
             if move != "":
-                moves_list.append(move)
-        return moves_list
+                self.moves_list[move_element.id] = move
+
+            # Mark the move as processed
+            self.chrome.execute_script("arguments[0].setAttribute('data-processed', 'true')", move_element)
+
+        return [val for val in self.moves_list.values()]
 
     def get_puzzles_move_list_elem(self):
         try:
