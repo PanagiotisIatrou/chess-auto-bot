@@ -51,3 +51,8 @@ class Grabber(ABC):
     @abstractmethod
     def click_puzzle_next(self):
         pass
+
+    # Makes a mouseless move
+    @abstractmethod
+    def make_mouseless_move(self, move, move_count):
+        pass

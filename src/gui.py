@@ -67,15 +67,18 @@ class GUI:
 
         # Create the website chooser radio buttons
         self.website = tk.StringVar(value="chesscom")
-        self.chesscom_radio_button = tk.Radiobutton(left_frame, text="Chess.com", variable=self.website, value="chesscom")
+        self.chesscom_radio_button = tk.Radiobutton(left_frame, text="Chess.com", variable=self.website,
+                                                    value="chesscom")
         self.chesscom_radio_button.pack(anchor=tk.NW)
-        self.lichess_radio_button = tk.Radiobutton(left_frame, text="Lichess.org", variable=self.website, value="lichess")
+        self.lichess_radio_button = tk.Radiobutton(left_frame, text="Lichess.org", variable=self.website,
+                                                   value="lichess")
         self.lichess_radio_button.pack(anchor=tk.NW)
 
         # Create the open browser button
         self.opening_browser = False
         self.opened_browser = False
-        self.open_browser_button = tk.Button(left_frame, text="Open Browser", command=self.on_open_browser_button_listener)
+        self.open_browser_button = tk.Button(left_frame, text="Open Browser",
+                                             command=self.on_open_browser_button_listener)
         self.open_browser_button.pack(anchor=tk.NW)
 
         # Create the start button
@@ -86,7 +89,8 @@ class GUI:
 
         # Create the manual mode checkbox
         self.enable_manual_mode = tk.BooleanVar(value=False)
-        self.manual_mode_checkbox = tk.Checkbutton(left_frame, text="Manual Mode", variable=self.enable_manual_mode, command=self.on_manual_mode_checkbox_listener)
+        self.manual_mode_checkbox = tk.Checkbutton(left_frame, text="Manual Mode", variable=self.enable_manual_mode,
+                                                   command=self.on_manual_mode_checkbox_listener)
         self.manual_mode_checkbox.pack(anchor=tk.NW)
 
         # Create the manual mode instructions
@@ -94,14 +98,21 @@ class GUI:
         self.manual_mode_label = tk.Label(self.manual_mode_frame, text="\u2022 Press 3 to make a move")
         self.manual_mode_label.pack(anchor=tk.NW)
 
+        # Create the mouseless mode checkbox
+        self.enable_mouseless_mode = tk.BooleanVar(value=False)
+        self.mouseless_mode_checkbox = tk.Checkbutton(left_frame, text="Mouseless Mode",
+                                                      variable=self.enable_mouseless_mode)
+        self.mouseless_mode_checkbox.pack(anchor=tk.NW)
+
         # Create the non-stop puzzles check button
         self.enable_non_stop_puzzles = tk.IntVar(value=0)
-        self.non_stop_puzzles_check_button = tk.Checkbutton(left_frame, text="Non-stop puzzles", variable=self.enable_non_stop_puzzles)
+        self.non_stop_puzzles_check_button = tk.Checkbutton(left_frame, text="Non-stop puzzles",
+                                                            variable=self.enable_non_stop_puzzles)
         self.non_stop_puzzles_check_button.pack(anchor=tk.NW)
 
         # Create the bongcloud check button
         self.enable_bongcloud = tk.IntVar()
-        self.bongcloud_check_button = tk.Checkbutton(left_frame, text='Bongcloud', variable=self.enable_bongcloud, onvalue=1, offvalue=0)
+        self.bongcloud_check_button = tk.Checkbutton(left_frame, text='Bongcloud', variable=self.enable_bongcloud)
         self.bongcloud_check_button.pack(anchor=tk.NW)
 
         # Separator
@@ -123,11 +134,21 @@ class GUI:
 
         # Create the skill level scale
         skill_level_frame = tk.Frame(left_frame)
-        tk.Label(skill_level_frame, text="Skill Level").pack(side=tk.LEFT, pady=19)
+        tk.Label(skill_level_frame, text="Skill Level").pack(side=tk.LEFT, pady=(19, 0))
         self.skill_level = tk.IntVar(value=20)
-        self.skill_level_scale = tk.Scale(skill_level_frame, from_=0, to=20, orient=tk.HORIZONTAL, variable=self.skill_level)
+        self.skill_level_scale = tk.Scale(skill_level_frame, from_=0, to=20, orient=tk.HORIZONTAL,
+                                          variable=self.skill_level)
         self.skill_level_scale.pack()
         skill_level_frame.pack(anchor=tk.NW)
+
+        # Create the Stockfish depth scale
+        stockfish_depth_frame = tk.Frame(left_frame)
+        tk.Label(stockfish_depth_frame, text="Depth").pack(side=tk.LEFT, pady=19)
+        self.stockfish_depth = tk.IntVar(value=15)
+        self.stockfish_depth_scale = tk.Scale(stockfish_depth_frame, from_=1, to=20, orient=tk.HORIZONTAL,
+                                              variable=self.stockfish_depth)
+        self.stockfish_depth_scale.pack()
+        stockfish_depth_frame.pack(anchor=tk.NW)
 
         # Create the memory entry field
         memory_frame = tk.Frame(left_frame)
@@ -156,12 +177,14 @@ class GUI:
 
         # Create the topmost check button
         self.enable_topmost = tk.IntVar(value=1)
-        self.topmost_check_button = tk.Checkbutton(left_frame, text='Window stays on top', variable=self.enable_topmost, onvalue=1, offvalue=0, command=self.on_topmost_check_button_listener)
+        self.topmost_check_button = tk.Checkbutton(left_frame, text='Window stays on top', variable=self.enable_topmost,
+                                                   onvalue=1, offvalue=0, command=self.on_topmost_check_button_listener)
         self.topmost_check_button.pack(anchor=tk.NW)
 
         # Create the select stockfish button
         self.stockfish_path = ""
-        self.select_stockfish_button = tk.Button(left_frame, text="Select Stockfish", command=self.on_select_stockfish_button_listener)
+        self.select_stockfish_button = tk.Button(left_frame, text="Select Stockfish",
+                                                 command=self.on_select_stockfish_button_listener)
         self.select_stockfish_button.pack(anchor=tk.NW)
 
         # Create the stockfish path text
@@ -177,7 +200,8 @@ class GUI:
         treeview_frame = tk.Frame(right_frame)
 
         # Create the moves Treeview
-        self.tree = ttk.Treeview(treeview_frame, column=("#", "White", "Black"), show='headings', height=23, selectmode='browse')
+        self.tree = ttk.Treeview(treeview_frame, column=("#", "White", "Black"), show='headings', height=23,
+                                 selectmode='browse')
         self.tree.pack(anchor=tk.NW, side=tk.LEFT)
 
         # # Add the scrollbar to the Treeview
@@ -239,7 +263,8 @@ class GUI:
     def browser_checker_thread(self):
         while not self.exit:
             try:
-                if self.opened_browser and self.chrome is not None and "target window already closed" in self.chrome.get_log('driver')[-1]["message"]:
+                if self.opened_browser and self.chrome is not None and "target window already closed" in \
+                        self.chrome.get_log('driver')[-1]["message"]:
                     self.opened_browser = False
 
                     # Set Opening Browser button state to closed
@@ -382,6 +407,11 @@ class GUI:
             tk.messagebox.showerror("Error", "Stockfish path is empty")
             return
 
+        # Check if mouseless mode is enabled when on chess.com
+        if self.enable_mouseless_mode.get() == 1 and self.website.get() == "chesscom":
+            tk.messagebox.showerror("Error", "Mouseless mode is only supported on lichess.org")
+            return
+
         # Create the pipes used for the communication
         # between the GUI and the Stockfish Bot process
         parent_conn, child_conn = multiprocess.Pipe()
@@ -392,8 +422,22 @@ class GUI:
         st_ov_queue = multiprocess.Queue()
 
         # Create the Stockfish Bot process
-        self.stockfish_bot_process = StockfishBot(self.chrome_url, self.chrome_session_id, self.website.get(), child_conn, st_ov_queue, self.stockfish_path, self.enable_manual_mode.get() == 1, self.enable_non_stop_puzzles.get() == 1,
-                                                  self.enable_bongcloud.get() == 1, self.slow_mover.get(), self.skill_level.get(), self.memory.get(), self.cpu_threads.get())
+        self.stockfish_bot_process = StockfishBot(
+            self.chrome_url,
+            self.chrome_session_id,
+            self.website.get(),
+            child_conn, st_ov_queue,
+            self.stockfish_path,
+            self.enable_manual_mode.get() == 1,
+            self.enable_mouseless_mode.get() == 1,
+            self.enable_non_stop_puzzles.get() == 1,
+            self.enable_bongcloud.get() == 1,
+            self.slow_mover.get(),
+            self.skill_level.get(),
+            self.stockfish_depth.get(),
+            self.memory.get(),
+            self.cpu_threads.get()
+        )
         self.stockfish_bot_process.start()
 
         # Create the overlay
@@ -447,7 +491,8 @@ class GUI:
 
     def on_export_pgn_button_listener(self):
         # Create the file dialog
-        f = filedialog.asksaveasfile(initialfile='match.pgn', defaultextension=".pgn", filetypes=[("Portable Game Notation", "*.pgn"), ("All Files", "*.*")])
+        f = filedialog.asksaveasfile(initialfile='match.pgn', defaultextension=".pgn",
+                                     filetypes=[("Portable Game Notation", "*.pgn"), ("All Files", "*.*")])
         if f is None:
             return
 
