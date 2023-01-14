@@ -15,7 +15,7 @@ import keyboard
 
 
 class StockfishBot(multiprocess.Process):
-    def __init__(self, chrome_url, chrome_session_id, website, pipe, overlay_queue, stockfish_path, enable_manual_mode, enable_mouseless_mode, enable_non_stop_puzzles, bongcloud, slow_mover, skill_level, stockfish_depth, memory, cpu_threads):
+    def __init__(self, chrome_url, chrome_session_id, website, pipe, overlay_queue, stockfish_path, enable_manual_mode, enable_mouseless_mode, enable_non_stop_puzzles, bongcloud, threefold_repetition_check, slow_mover, skill_level, stockfish_depth, memory, cpu_threads):
         multiprocess.Process.__init__(self)
 
         self.chrome_url = chrome_url
@@ -28,6 +28,7 @@ class StockfishBot(multiprocess.Process):
         self.enable_mouseless_mode = enable_mouseless_mode
         self.enable_non_stop_puzzles = enable_non_stop_puzzles
         self.bongcloud = bongcloud
+        self.threefold_repetition_check = threefold_repetition_check
         self.slow_mover = slow_mover
         self.skill_level = skill_level
         self.stockfish_depth = stockfish_depth
@@ -65,7 +66,6 @@ class StockfishBot(multiprocess.Process):
         end_pos_x, end_pos_y = self.move_to_screen_pos(move[2:4])
 
         return (start_pos_x, start_pos_y), (end_pos_x, end_pos_y)
-
 
     def make_move(self, move):
         # Get the start and end position screen coordinates
@@ -183,6 +183,39 @@ class StockfishBot(multiprocess.Process):
                             move = stockfish.get_best_move()
                     else:
                         move = stockfish.get_best_move()
+
+                    if self.threefold_repetition_check:
+                        # Push the best move to the board
+                        board.push_uci(move)
+
+                        # If the next move is not our turn
+                        # And the current move would cause a threefold repetition
+                        if ((self.is_white and board.turn != chess.WHITE) or (not self.is_white and board.turn != chess.BLACK)) and board.can_claim_threefold_repetition():
+                            # Get the top 3 best moves
+                            top5_moves = [move["Move"] for move in stockfish.get_top_moves(3)]
+
+                            # Undo the move
+                            board.pop()
+
+                            # Try the top 3 moves
+                            for next_move in top5_moves:
+                                # Push the move to the board
+                                board.push_uci(next_move)
+                                # If it won't cause a threefold repetition
+                                if not board.can_claim_threefold_repetition():
+                                    # Use this move
+                                    move = next_move
+                                    # Remove from the board
+                                    board.pop()
+                                    # Break out of the loop
+                                    break
+                                # If the move would cause a threefold repetition
+                                # Remove from the board and try the next move
+                                board.pop()
+                        # If the move won't cause a threefold repetition
+                        else:
+                            # Remove the move from the board
+                            board.pop()
 
                     # Wait for keypress or player movement if in manual mode
                     self_moved = False

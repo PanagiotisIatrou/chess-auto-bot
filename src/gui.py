@@ -115,6 +115,12 @@ class GUI:
         self.bongcloud_check_button = tk.Checkbutton(left_frame, text='Bongcloud', variable=self.enable_bongcloud)
         self.bongcloud_check_button.pack(anchor=tk.NW)
 
+        # Create the Threefold Repetition Check checkbox
+        self.threefold_repetition_check = tk.BooleanVar(value=False)
+        self.threefold_repetition_check_checkbox = tk.Checkbutton(left_frame, text="Threefold Repetition Check",
+                                                                  variable=self.threefold_repetition_check)
+        self.threefold_repetition_check_checkbox.pack(anchor=tk.NW)
+
         # Separator
         separator_frame = tk.Frame(left_frame)
         separator = ttk.Separator(separator_frame, orient='horizontal')
@@ -432,6 +438,7 @@ class GUI:
             self.enable_mouseless_mode.get() == 1,
             self.enable_non_stop_puzzles.get() == 1,
             self.enable_bongcloud.get() == 1,
+            self.threefold_repetition_check.get() == 1,
             self.slow_mover.get(),
             self.skill_level.get(),
             self.stockfish_depth.get(),
