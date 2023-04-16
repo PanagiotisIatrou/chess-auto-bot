@@ -1,5 +1,3 @@
-import multiprocessing
-
 import multiprocess
 import threading
 import time
@@ -110,10 +108,25 @@ class GUI:
                                                             variable=self.enable_non_stop_puzzles)
         self.non_stop_puzzles_check_button.pack(anchor=tk.NW)
 
+        # Create the non-stop matches check button
+        self.enable_non_stop_matches = tk.IntVar(value=0)
+        self.non_stop_matches_check_button = tk.Checkbutton(left_frame, text="Non-stop online matches",
+                                                            variable=self.enable_non_stop_matches)
+        self.non_stop_matches_check_button.pack(anchor=tk.NW)
+
         # Create the bongcloud check button
         self.enable_bongcloud = tk.IntVar()
         self.bongcloud_check_button = tk.Checkbutton(left_frame, text='Bongcloud', variable=self.enable_bongcloud)
         self.bongcloud_check_button.pack(anchor=tk.NW)
+
+        # Create the mouse latency scale
+        mouse_latency_frame = tk.Frame(left_frame)
+        tk.Label(mouse_latency_frame, text="Mouse Latency (seconds)").pack(side=tk.LEFT, pady=(17, 0))
+        self.mouse_latency = tk.DoubleVar(value=0.0)
+        self.mouse_latency_scale = tk.Scale(mouse_latency_frame, from_=0.0, to=5, resolution=0.2, orient=tk.HORIZONTAL,
+                                          variable=self.mouse_latency)
+        self.mouse_latency_scale.pack()
+        mouse_latency_frame.pack(anchor=tk.NW)
 
         # Separator
         separator_frame = tk.Frame(left_frame)
@@ -431,6 +444,8 @@ class GUI:
             self.enable_manual_mode.get() == 1,
             self.enable_mouseless_mode.get() == 1,
             self.enable_non_stop_puzzles.get() == 1,
+            self.enable_non_stop_matches.get() == 1,
+            self.mouse_latency.get(),
             self.enable_bongcloud.get() == 1,
             self.slow_mover.get(),
             self.skill_level.get(),

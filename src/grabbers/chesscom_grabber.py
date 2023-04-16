@@ -1,4 +1,4 @@
-from selenium.common import NoSuchElementException
+from selenium.common import NoSuchElementException, StaleElementReferenceException
 from selenium.webdriver.common.by import By
 
 from grabbers.grabber import Grabber
@@ -10,13 +10,17 @@ class ChesscomGrabber(Grabber):
         self.moves_list = {}
 
     def update_board_elem(self):
-        try:
-            self._board_elem = self.chrome.find_element(By.XPATH, "//*[@id='board-vs-personalities']")
-        except NoSuchElementException:
+        # Keep looking for board
+        while True:
             try:
-                self._board_elem = self.chrome.find_element(By.XPATH, "//*[@id='board-single']")
+                self._board_elem = self.chrome.find_element(By.XPATH, "//*[@id='board-vs-personalities']")
+                return
             except NoSuchElementException:
-                self._board_elem = None
+                try:
+                    self._board_elem = self.chrome.find_element(By.XPATH, "//*[@id='board-single']")
+                    return
+                except NoSuchElementException:
+                    self._board_elem = None
 
     def is_white(self):
         # Find the square names list
@@ -63,7 +67,14 @@ class ChesscomGrabber(Grabber):
                 return False
         except NoSuchElementException:
             # Return False since the game over window is not found
-            return False
+            try:
+                game_over_window = self.chrome.find_element(By.CLASS_NAME, "board-modal-container-container")
+                if game_over_window is not None:
+                    return True
+                else:
+                    return False
+            except NoSuchElementException:
+                return False
 
     def get_move_list(self):
         # Find the moves list
@@ -71,16 +82,25 @@ class ChesscomGrabber(Grabber):
             move_list_elem = self.chrome.find_element(By.TAG_NAME, "vertical-move-list")
         except NoSuchElementException:
             return None
+        except StaleElementReferenceException:
+            return None
 
         # Select all children with class containing "white node" or "black node"
         # Moves that are not pawn moves have a different structure
         # containing children
         if not self.moves_list:
-            # If the moves list is empty, find all moves
-            moves = move_list_elem.find_elements(By.CSS_SELECTOR, "div.move [data-ply]")
+            try:
+                # If the moves list is empty, find all moves
+                moves = move_list_elem.find_elements(By.CSS_SELECTOR, "div.move [data-ply]")
+            except StaleElementReferenceException:
+                return
+
         else:
-            # If the moves list is not empty, find only the new moves
-            moves = move_list_elem.find_elements(By.CSS_SELECTOR, "div.move [data-ply]:not([data-processed])")
+            try:
+                # If the moves list is not empty, find only the new moves
+                moves = move_list_elem.find_elements(By.CSS_SELECTOR, "div.move [data-ply]:not([data-processed])")
+            except StaleElementReferenceException:
+                return
 
         for move in moves:
             move_class = move.get_attribute("class")
@@ -92,6 +112,8 @@ class ChesscomGrabber(Grabber):
                     child = move.find_element(By.XPATH, "./*")
                     figure = child.get_attribute("data-figurine")
                 except NoSuchElementException:
+                    figure = None
+                except StaleElementReferenceException:
                     figure = None
 
                 # Check if it was en-passant or figure-move
@@ -122,6 +144,9 @@ class ChesscomGrabber(Grabber):
         return False
 
     def click_puzzle_next(self):
+        pass
+
+    def click_game_next(self):
         pass
 
     def make_mouseless_move(self, move, move_count):
