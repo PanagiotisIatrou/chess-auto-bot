@@ -64,7 +64,10 @@ class ChesscomGrabber(Grabber):
         try:
             move_list_elem = self.chrome.find_element(By.CLASS_NAME, "play-controller-scrollable")
         except NoSuchElementException:
-            return None
+            try:
+                move_list_elem = self.chrome.find_element(By.CLASS_NAME, "move-list-wrapper-component")
+            except NoSuchElementException:
+                    return None
 
         # Select all children with class containing "white node" or "black node"
         # Moves that are not pawn moves have a different structure
