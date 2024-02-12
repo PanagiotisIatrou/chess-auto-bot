@@ -15,11 +15,11 @@ import keyboard
 
 
 class StockfishBot(multiprocess.Process):
-    def __init__(self, chrome_url, chrome_session_id, website, pipe, overlay_queue, stockfish_path, enable_manual_mode, enable_mouseless_mode, enable_non_stop_puzzles, bongcloud, slow_mover, skill_level, stockfish_depth, memory, cpu_threads):
+    def __init__(self, Firefox_url, Firefox_session_id, website, pipe, overlay_queue, stockfish_path, enable_manual_mode, enable_mouseless_mode, enable_non_stop_puzzles, bongcloud, slow_mover, skill_level, stockfish_depth, memory, cpu_threads):
         multiprocess.Process.__init__(self)
 
-        self.chrome_url = chrome_url
-        self.chrome_session_id = chrome_session_id
+        self.Firefox_url = Firefox_url
+        self.Firefox_session_id = Firefox_session_id
         self.website = website
         self.pipe = pipe
         self.overlay_queue = overlay_queue
@@ -59,7 +59,7 @@ class StockfishBot(multiprocess.Process):
 
         return x, y
 
-    def get_move_pos(self, move):
+    def get_move_pos(self, move):  # sourcery skip: remove-redundant-slice-index
         # Get the start and end position screen coordinates
         start_pos_x, start_pos_y = self.move_to_screen_pos(move[0:2])
         end_pos_x, end_pos_y = self.move_to_screen_pos(move[2:4])
@@ -67,7 +67,7 @@ class StockfishBot(multiprocess.Process):
         return (start_pos_x, start_pos_y), (end_pos_x, end_pos_y)
 
 
-    def make_move(self, move):
+    def make_move(self, move):  # sourcery skip: extract-method
         # Get the start and end position screen coordinates
         start_pos, end_pos = self.get_move_pos(move)
 
@@ -96,10 +96,11 @@ class StockfishBot(multiprocess.Process):
             pass
 
     def run(self):
+        # sourcery skip: extract-duplicate-method, switch, use-fstring-for-concatenation
         if self.website == "chesscom":
-            self.grabber = ChesscomGrabber(self.chrome_url, self.chrome_session_id)
+            self.grabber = ChesscomGrabber(self.Firefox_url, self.Firefox_session_id)
         else:
-            self.grabber = LichessGrabber(self.chrome_url, self.chrome_session_id)
+            self.grabber = LichessGrabber(self.Firefox_url, self.Firefox_session_id)
 
         # Initialize Stockfish
         parameters = {
