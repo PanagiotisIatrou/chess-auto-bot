@@ -1,9 +1,9 @@
 multiprocess~=0.70.14
-selenium~=4.5.0
-webdriver-manager~=3.8.4
+selenium==4.9.1
+webdriver-manager==4.0.1
 PyAutoGUI~=0.9.53
-chess~=1.9.3
+chess==1.10.0
 stockfish~=3.28.0
-packaging~=21.3
+packaging==24.0
 keyboard~=0.13.5
 PyQt5~=5.15.7
