@@ -45,7 +45,7 @@ class GUI:
         # Set the window properties
         master.title("Chess")
         master.geometry("")
-        # master.iconphoto(True, tk.PhotoImage(file="src/assets/pawn_32x32.png"))
+        master.iconphoto(True, tk.PhotoImage(file="src/assets/pawn_32x32.png"))
         master.resizable(False, False)
         master.attributes("-topmost", True)
         master.protocol("WM_DELETE_WINDOW", self.on_close_listener)
@@ -67,11 +67,17 @@ class GUI:
         # Create the website chooser radio buttons
         self.website = tk.StringVar(value="chesscom")
         self.chesscom_radio_button = tk.Radiobutton(
-            left_frame, text="Chess.com", variable=self.website, value="chesscom"
+            left_frame,
+            text="Chess.com",
+            variable=self.website,
+            value="chesscom"
         )
         self.chesscom_radio_button.pack(anchor=tk.NW)
         self.lichess_radio_button = tk.Radiobutton(
-            left_frame, text="Lichess.org", variable=self.website, value="lichess"
+            left_frame,
+            text="Lichess.org",
+            variable=self.website,
+            value="lichess"
         )
         self.lichess_radio_button.pack(anchor=tk.NW)
 
@@ -113,21 +119,27 @@ class GUI:
         # Create the mouseless mode checkbox
         self.enable_mouseless_mode = tk.BooleanVar(value=False)
         self.mouseless_mode_checkbox = tk.Checkbutton(
-            left_frame, text="Mouseless Mode", variable=self.enable_mouseless_mode
+            left_frame,
+            text="Mouseless Mode",
+            variable=self.enable_mouseless_mode
         )
         self.mouseless_mode_checkbox.pack(anchor=tk.NW)
 
         # Create the non-stop puzzles check button
         self.enable_non_stop_puzzles = tk.IntVar(value=0)
         self.non_stop_puzzles_check_button = tk.Checkbutton(
-            left_frame, text="Non-stop puzzles", variable=self.enable_non_stop_puzzles
+            left_frame,
+            text="Non-stop puzzles",
+            variable=self.enable_non_stop_puzzles
         )
         self.non_stop_puzzles_check_button.pack(anchor=tk.NW)
 
         # Create the bongcloud check button
         self.enable_bongcloud = tk.IntVar()
         self.bongcloud_check_button = tk.Checkbutton(
-            left_frame, text="Bongcloud", variable=self.enable_bongcloud
+            left_frame,
+            text="Bongcloud",
+            variable=self.enable_bongcloud
         )
         self.bongcloud_check_button.pack(anchor=tk.NW)
 
@@ -167,7 +179,7 @@ class GUI:
         # Create the Stockfish depth scale
         stockfish_depth_frame = tk.Frame(left_frame)
         tk.Label(stockfish_depth_frame, text="Depth").pack(side=tk.LEFT, pady=19)
-        self.stockfish_depth = tk.IntVar(value=20)
+        self.stockfish_depth = tk.IntVar(value=15)
         self.stockfish_depth_scale = tk.Scale(
             stockfish_depth_frame,
             from_=1,
@@ -181,7 +193,7 @@ class GUI:
         # Create the memory entry field
         memory_frame = tk.Frame(left_frame)
         tk.Label(memory_frame, text="Memory").pack(side=tk.LEFT)
-        self.memory = tk.IntVar(value=4000)
+        self.memory = tk.IntVar(value=512)
         self.memory_entry = tk.Entry(
             memory_frame, textvariable=self.memory, justify="center", width=9
         )
@@ -192,7 +204,7 @@ class GUI:
         # Create the CPU threads entry field
         cpu_threads_frame = tk.Frame(left_frame)
         tk.Label(cpu_threads_frame, text="CPU Threads").pack(side=tk.LEFT)
-        self.cpu_threads = tk.IntVar(value=3)
+        self.cpu_threads = tk.IntVar(value=1)
         self.cpu_threads_entry = tk.Entry(
             cpu_threads_frame, textvariable=self.cpu_threads, justify="center", width=7
         )
@@ -252,7 +264,9 @@ class GUI:
 
         # # Add the scrollbar to the Treeview
         self.vsb = ttk.Scrollbar(
-            treeview_frame, orient="vertical", command=self.tree.yview
+            treeview_frame,
+            orient="vertical",
+            command=self.tree.yview
         )
         self.vsb.pack(fill=tk.Y, expand=True)
         self.tree.configure(yscrollcommand=self.vsb.set)
@@ -390,20 +404,34 @@ class GUI:
                         self.tree.yview_moveto(1)
                     elif data[:7] == "ERR_EXE":
                         tk.messagebox.showerror(
-                            "Error", "Stockfish path provided is not valid!"
+                            "Error",
+                            "Stockfish path provided is not valid!"
                         )
                     elif data[:8] == "ERR_PERM":
                         tk.messagebox.showerror(
-                            "Error", "Stockfish path provided is not executable!"
+                            "Error",
+                            "Stockfish path provided is not executable!"
                         )
                     elif data[:9] == "ERR_BOARD":
-                        tk.messagebox.showerror("Error", "Cant find board!")
+                        tk.messagebox.showerror(
+                            "Error",
+                            "Cant find board!"
+                        )
                     elif data[:9] == "ERR_COLOR":
-                        tk.messagebox.showerror("Error", "Cant find player color!")
+                        tk.messagebox.showerror(
+                            "Error",
+                            "Cant find player color!"
+                        )
                     elif data[:9] == "ERR_MOVES":
-                        tk.messagebox.showerror("Error", "Cant find moves list!")
+                        tk.messagebox.showerror(
+                            "Error",
+                            "Cant find moves list!"
+                        )
                     elif data[:12] == "ERR_GAMEOVER":
-                        tk.messagebox.showerror("Error", "Game has already finished!")
+                        tk.messagebox.showerror(
+                            "Error",
+                            "Game has already finished!"
+                        )
             except (BrokenPipeError, OSError):
                 self.stockfish_bot_pipe = None
 
@@ -429,18 +457,14 @@ class GUI:
 
         # Open Webdriver
         options = webdriver.ChromeOptions()
-        options.add_argument("start-maximized")
-        options.add_experimental_option(
-            "excludeSwitches", ["enable-logging", "enable-automation"]
-        )
-        options.add_argument("--disable-blink-features=AutomationControlled")
-        options.add_argument(r"--user-data-dir=C:\Users\marcus\AppData\Local\Google\Chrome\User Data")
-        options.add_argument(r'--profile-directory=Profile 3')
-        options.add_experimental_option("useAutomationExtension", False)
+        options.add_experimental_option("excludeSwitches", ["enable-logging", "enable-automation"])
+        options.add_argument('--disable-blink-features=AutomationControlled')
+        options.add_experimental_option('useAutomationExtension', False)
         try:
             service = Service()
             self.chrome = webdriver.Chrome(
-                service=Service(ChromeDriverManager().install()), options=options
+                service=Service(ChromeDriverManager().install()),
+                options=options
             )
         except WebDriverException:
             # No chrome installed
@@ -479,12 +503,18 @@ class GUI:
         # Check if Slow mover value is valid
         slow_mover = self.slow_mover.get()
         if slow_mover < 10 or slow_mover > 1000:
-            tk.messagebox.showerror("Error", "Slow Mover must be between 10 and 1000")
+            tk.messagebox.showerror(
+                "Error",
+                "Slow Mover must be between 10 and 1000"
+            )
             return
 
         # Check if stockfish path is not empty
         if self.stockfish_path == "":
-            tk.messagebox.showerror("Error", "Stockfish path is empty")
+            tk.messagebox.showerror(
+                "Error",
+                "Stockfish path is empty"
+            )
             return
 
         # Check if mouseless mode is enabled when on chess.com
