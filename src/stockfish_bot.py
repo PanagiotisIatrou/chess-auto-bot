@@ -59,7 +59,7 @@ class StockfishBot(multiprocess.Process):
 
         return x, y
 
-    def get_move_pos(self, move):
+    def get_move_pos(self, move):  # sourcery skip: remove-redundant-slice-index
         # Get the start and end position screen coordinates
         start_pos_x, start_pos_y = self.move_to_screen_pos(move[0:2])
         end_pos_x, end_pos_y = self.move_to_screen_pos(move[2:4])
@@ -67,7 +67,7 @@ class StockfishBot(multiprocess.Process):
         return (start_pos_x, start_pos_y), (end_pos_x, end_pos_y)
 
 
-    def make_move(self, move):
+    def make_move(self, move):  # sourcery skip: extract-method
         # Get the start and end position screen coordinates
         start_pos, end_pos = self.get_move_pos(move)
 
@@ -96,6 +96,7 @@ class StockfishBot(multiprocess.Process):
             pass
 
     def run(self):
+        # sourcery skip: extract-duplicate-method, switch, use-fstring-for-concatenation
         if self.website == "chesscom":
             self.grabber = ChesscomGrabber(self.chrome_url, self.chrome_session_id)
         else:
