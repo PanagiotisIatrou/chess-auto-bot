@@ -119,5 +119,8 @@ class ChesscomGrabber(Grabber):
     def click_puzzle_next(self):
         pass
 
+    def click_game_next(self):
+        pass
+
     def make_mouseless_move(self, move, move_count):
         pass

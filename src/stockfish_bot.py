@@ -1,5 +1,3 @@
-from random import random
-
 import multiprocess
 from stockfish import Stockfish
 import pyautogui
@@ -15,7 +13,7 @@ import keyboard
 
 
 class StockfishBot(multiprocess.Process):
-    def __init__(self, chrome_url, chrome_session_id, website, pipe, overlay_queue, stockfish_path, enable_manual_mode, enable_mouseless_mode, enable_non_stop_puzzles, bongcloud, slow_mover, skill_level, stockfish_depth, memory, cpu_threads):
+    def __init__(self, chrome_url, chrome_session_id, website, pipe, overlay_queue, stockfish_path, enable_manual_mode, enable_mouseless_mode, enable_non_stop_puzzles, enable_non_stop_matches, mouse_latency, bongcloud, slow_mover, skill_level, stockfish_depth, memory, cpu_threads):
         multiprocess.Process.__init__(self)
 
         self.chrome_url = chrome_url
@@ -27,6 +25,8 @@ class StockfishBot(multiprocess.Process):
         self.enable_manual_mode = enable_manual_mode
         self.enable_mouseless_mode = enable_mouseless_mode
         self.enable_non_stop_puzzles = enable_non_stop_puzzles
+        self.enable_non_stop_matches = enable_non_stop_matches
+        self.mouse_latency = mouse_latency
         self.bongcloud = bongcloud
         self.slow_mover = slow_mover
         self.skill_level = skill_level
@@ -73,6 +73,7 @@ class StockfishBot(multiprocess.Process):
 
         # Drag the piece from the start to the end position
         pyautogui.moveTo(start_pos[0], start_pos[1])
+        time.sleep(self.mouse_latency)
         pyautogui.dragTo(end_pos[0], end_pos[1])
 
         # Check for promotion. If there is a promotion,
@@ -94,6 +95,17 @@ class StockfishBot(multiprocess.Process):
     def wait_for_gui_to_delete(self):
         while self.pipe.recv() != "DELETE":
             pass
+
+    def go_to_next_puzzle(self):
+        self.grabber.click_puzzle_next()
+        self.pipe.send("RESTART")
+        self.wait_for_gui_to_delete()
+
+    def find_new_online_match(self):
+        time.sleep(2)
+        self.grabber.click_game_next()
+        self.pipe.send("RESTART")
+        self.wait_for_gui_to_delete()
 
     def run(self):
         # sourcery skip: extract-duplicate-method, switch, use-fstring-for-concatenation
@@ -224,9 +236,9 @@ class StockfishBot(multiprocess.Process):
                     if board.is_checkmate():
                         # Send restart message to GUI
                         if self.enable_non_stop_puzzles and self.grabber.is_game_puzzles():
-                            self.grabber.click_puzzle_next()
-                            self.pipe.send("RESTART")
-                            self.wait_for_gui_to_delete()
+                            self.go_to_next_puzzle()
+                        elif self.enable_non_stop_matches and not self.enable_non_stop_puzzles:
+                            self.find_new_online_match()
                         return
 
                     time.sleep(0.1)
@@ -239,9 +251,9 @@ class StockfishBot(multiprocess.Process):
                     if self.grabber.is_game_over():
                         # Send restart message to GUI
                         if self.enable_non_stop_puzzles and self.grabber.is_game_puzzles():
-                            self.grabber.click_puzzle_next()
-                            self.pipe.send("RESTART")
-                            self.wait_for_gui_to_delete()
+                            self.go_to_next_puzzle()
+                        elif self.enable_non_stop_matches and not self.enable_non_stop_puzzles:
+                            self.find_new_online_match()
                         return
                     move_list = self.grabber.get_move_list()
                     if move_list is None:
@@ -257,10 +269,9 @@ class StockfishBot(multiprocess.Process):
                 if board.is_checkmate():
                     # Send restart message to GUI
                     if self.enable_non_stop_puzzles and self.grabber.is_game_puzzles():
-                        self.grabber.click_puzzle_next()
-                        self.pipe.send("RESTART")
-                        self.wait_for_gui_to_delete()
-
+                        self.go_to_next_puzzle()
+                    elif self.enable_non_stop_matches and not self.enable_non_stop_puzzles:
+                        self.find_new_online_match()
                     return
         except Exception as e:
             print(e)
