@@ -74,16 +74,16 @@ class ChesscomGrabber(Grabber):
         # containing children
         if not self.moves_list:
             # If the moves list is empty, find all moves
-            moves = move_list_elem.find_elements(By.CSS_SELECTOR, "div.move [data-ply]")
+            moves = move_list_elem.find_elements(By.CSS_SELECTOR, "div.node[data-node]")
         else:
             # If the moves list is not empty, find only the new moves
-            moves = move_list_elem.find_elements(By.CSS_SELECTOR, "div.move [data-ply]:not([data-processed])")
+            moves = move_list_elem.find_elements(By.CSS_SELECTOR, "div.node[data-node]:not([data-processed])")
 
         for move in moves:
             move_class = move.get_attribute("class")
 
             # Check if it is indeed a move
-            if "white node" in move_class or "black node" in move_class:
+            if "white-move" in move_class or "black-move" in move_class:
                 # Check if it has a figure
                 try:
                     child = move.find_element(By.XPATH, "./*")
@@ -94,7 +94,7 @@ class ChesscomGrabber(Grabber):
                 # Check if it was en-passant or figure-move
                 if figure is None:
                     # If the moves_list is empty or the last move was not the current move
-                    self.moves_list[move.get_attribute("data-ply")] = move.text
+                    self.moves_list[move.get_attribute("data-node")] = move.text
                 elif "=" in move.text:
                     m = move.text + figure
                     # If the move is a check, add the + in the end
@@ -103,10 +103,10 @@ class ChesscomGrabber(Grabber):
                         m += "+"
 
                     # If the moves_list is empty or the last move was not the current move
-                    self.moves_list[move.get_attribute("data-ply")] = m
+                    self.moves_list[move.get_attribute("data-node")] = m
                 else:
                     # If the moves_list is empty or the last move was not the current move
-                    self.moves_list[move.get_attribute("data-ply")] = figure + move.text
+                    self.moves_list[move.get_attribute("data-node")] = figure + move.text
 
                 # Mark the move as processed
                 self.chrome.execute_script("arguments[0].setAttribute('data-processed', 'true')", move)
