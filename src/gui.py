@@ -1,3 +1,5 @@
+import os
+
 import multiprocess
 import threading
 import time
@@ -6,6 +8,7 @@ from tkinter import ttk, filedialog
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
 from webdriver_manager.chrome import ChromeDriverManager
+from selenium.webdriver.chrome.service import Service as ChromeService
 from overlay import run
 from stockfish_bot import StockfishBot
 from selenium.common import WebDriverException
@@ -474,9 +477,14 @@ class GUI:
         options.add_argument('--disable-blink-features=AutomationControlled')
         options.add_experimental_option('useAutomationExtension', False)
         try:
-            service = Service()
+            chrome_install = ChromeDriverManager().install()
+
+            folder = os.path.dirname(chrome_install)
+            chromedriver_path = os.path.join(folder, "chromedriver.exe")
+
+            service = ChromeService(chromedriver_path)
             self.chrome = webdriver.Chrome(
-                service=Service(ChromeDriverManager().install()),
+                service=service,
                 options=options
             )
         except WebDriverException:
@@ -488,6 +496,17 @@ class GUI:
             tk.messagebox.showerror(
                 "Error",
                 "Cant find Chrome. You need to have Chrome installed for this to work.",
+            )
+            return
+        except Exception as e:
+            # Other error
+            self.opening_browser = False
+            self.open_browser_button["text"] = "Open Browser"
+            self.open_browser_button["state"] = "normal"
+            self.open_browser_button.update()
+            tk.messagebox.showerror(
+                "Error",
+                f"An error occurred while opening the browser: {e}",
             )
             return
 
