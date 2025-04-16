@@ -1,6 +1,6 @@
 import re
 
-from selenium.common import NoSuchElementException
+from selenium.common import NoSuchElementException, StaleElementReferenceException
 from selenium.webdriver.common.by import By
 
 from grabbers.grabber import Grabber
@@ -13,16 +13,20 @@ class LichessGrabber(Grabber):
         self.moves_list = {}
 
     def update_board_elem(self):
-        try:
-            # Try finding the normal board
-            self._board_elem = self.chrome.find_element(By.XPATH,
-                                                        '//*[@id="main-wrap"]/main/div[1]/div[1]/div/cg-container')
-        except NoSuchElementException:
+        # Keep looking for board
+        while True:
             try:
-                # Try finding the board in the puzzles page
-                self._board_elem = self.chrome.find_element(By.XPATH, '/html/body/div[2]/main/div[1]/div/cg-container')
+                # Try finding the normal board
+                self._board_elem = self.chrome.find_element(By.XPATH,
+                                                            '//*[@id="main-wrap"]/main/div[1]/div[1]/div/cg-container')
+                return
             except NoSuchElementException:
-                self._board_elem = None
+                try:
+                    # Try finding the board in the puzzles page
+                    self._board_elem = self.chrome.find_element(By.XPATH, '/html/body/div[2]/main/div[1]/div/cg-container')
+                    return
+                except NoSuchElementException:
+                    self._board_elem = None
 
     def is_white(self):
         # sourcery skip: assign-if-exp, boolean-if-exp-identity, remove-unnecessary-cast
@@ -169,6 +173,18 @@ class LichessGrabber(Grabber):
                 return
 
         # Click the continue training button
+        self.chrome.execute_script("arguments[0].click();", next_button)
+
+    def click_game_next(self):
+        # Find the next new game button
+        try:
+            next_button = self.chrome.find_element(By.XPATH, "//*[contains(text(), 'New opponent')]")
+        except NoSuchElementException:
+            return
+        except StaleElementReferenceException:
+            return
+
+        # Click the next game button
         self.chrome.execute_script("arguments[0].click();", next_button)
 
     def make_mouseless_move(self, move, move_count):

@@ -1,9 +1,9 @@
 import math
 import sys
 import threading
-from PyQt5.QtCore import Qt, QPoint
-from PyQt5.QtGui import QBrush, QColor, QPainter, QPen, QGuiApplication, QPolygon
-from PyQt5.QtWidgets import QApplication, QWidget
+from PyQt6.QtCore import Qt, QPoint
+from PyQt6.QtGui import QBrush, QColor, QPainter, QPen, QGuiApplication, QPolygon
+from PyQt6.QtWidgets import QApplication, QWidget
 
 
 class OverlayScreen(QWidget):

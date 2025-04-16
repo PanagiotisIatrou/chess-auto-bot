@@ -65,7 +65,7 @@ class ChesscomGrabber(Grabber):
             move_list_elem = self.chrome.find_element(By.CLASS_NAME, "play-controller-scrollable")
         except NoSuchElementException:
             try:
-                move_list_elem = self.chrome.find_element(By.CLASS_NAME, "move-list-wrapper-component")
+                move_list_elem = self.chrome.find_element(By.CLASS_NAME, "mode-swap-move-list-wrapper-component")
             except NoSuchElementException:
                     return None
 
@@ -74,27 +74,28 @@ class ChesscomGrabber(Grabber):
         # containing children
         if not self.moves_list:
             # If the moves list is empty, find all moves
-            moves = move_list_elem.find_elements(By.CSS_SELECTOR, "div.move [data-ply]")
+            moves = move_list_elem.find_elements(By.CSS_SELECTOR, "div.node[data-node]")
         else:
             # If the moves list is not empty, find only the new moves
-            moves = move_list_elem.find_elements(By.CSS_SELECTOR, "div.move [data-ply]:not([data-processed])")
+            moves = move_list_elem.find_elements(By.CSS_SELECTOR, "div.node[data-node]:not([data-processed])")
 
         for move in moves:
             move_class = move.get_attribute("class")
 
             # Check if it is indeed a move
-            if "white node" in move_class or "black node" in move_class:
-                # Check if it has a figure
+            if "white-move" in move_class or "black-move" in move_class:
+                # Check if it has a figure - search deeper in the structure
                 try:
-                    child = move.find_element(By.XPATH, "./*")
-                    figure = child.get_attribute("data-figurine")
+                    # Look for any element with data-figurine attribute anywhere within this move
+                    figurine_elem = move.find_element(By.CSS_SELECTOR, "[data-figurine]")
+                    figure = figurine_elem.get_attribute("data-figurine")
                 except NoSuchElementException:
                     figure = None
 
                 # Check if it was en-passant or figure-move
                 if figure is None:
                     # If the moves_list is empty or the last move was not the current move
-                    self.moves_list[move.get_attribute("data-ply")] = move.text
+                    self.moves_list[move.get_attribute("data-node")] = move.text
                 elif "=" in move.text:
                     m = move.text + figure
                     # If the move is a check, add the + in the end
@@ -103,10 +104,10 @@ class ChesscomGrabber(Grabber):
                         m += "+"
 
                     # If the moves_list is empty or the last move was not the current move
-                    self.moves_list[move.get_attribute("data-ply")] = m
+                    self.moves_list[move.get_attribute("data-node")] = m
                 else:
                     # If the moves_list is empty or the last move was not the current move
-                    self.moves_list[move.get_attribute("data-ply")] = figure + move.text
+                    self.moves_list[move.get_attribute("data-node")] = figure + move.text
 
                 # Mark the move as processed
                 self.chrome.execute_script("arguments[0].setAttribute('data-processed', 'true')", move)
@@ -117,6 +118,9 @@ class ChesscomGrabber(Grabber):
         return False
 
     def click_puzzle_next(self):
+        pass
+
+    def click_game_next(self):
         pass
 
     def make_mouseless_move(self, move, move_count):

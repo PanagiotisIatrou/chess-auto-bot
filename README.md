@@ -51,6 +51,10 @@ Note that the mouse is being moved by python
     - [ ] chess.com
     - [x] lichess.org
 - Bongcloud mode ( ͡° ͜ʖ ͡° )
+- Non-stop mode (The bot will play non-stop)
+    - [ ] chess.com
+    - [x] lichess.org
+- Ability to add a fixed amount of mouse latency
 - Skill level selection (0-20)
 - Depth level selection (1-20)
 - Memory (RAM) usage selection

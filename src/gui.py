@@ -1,4 +1,4 @@
-import multiprocessing
+import os
 
 import multiprocess
 import threading
@@ -8,6 +8,7 @@ from tkinter import ttk, filedialog
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
 from webdriver_manager.chrome import ChromeDriverManager
+from selenium.webdriver.chrome.service import Service as ChromeService
 from overlay import run
 from stockfish_bot import StockfishBot
 from selenium.common import WebDriverException
@@ -134,6 +135,12 @@ class GUI:
         )
         self.non_stop_puzzles_check_button.pack(anchor=tk.NW)
 
+        # Create the non-stop matches check button
+        self.enable_non_stop_matches = tk.IntVar(value=0)
+        self.non_stop_matches_check_button = tk.Checkbutton(left_frame, text="Non-stop online matches",
+                                                            variable=self.enable_non_stop_matches)
+        self.non_stop_matches_check_button.pack(anchor=tk.NW)
+
         # Create the bongcloud check button
         self.enable_bongcloud = tk.IntVar()
         self.bongcloud_check_button = tk.Checkbutton(
@@ -142,6 +149,15 @@ class GUI:
             variable=self.enable_bongcloud
         )
         self.bongcloud_check_button.pack(anchor=tk.NW)
+
+        # Create the mouse latency scale
+        mouse_latency_frame = tk.Frame(left_frame)
+        tk.Label(mouse_latency_frame, text="Mouse Latency (seconds)").pack(side=tk.LEFT, pady=(17, 0))
+        self.mouse_latency = tk.DoubleVar(value=0.0)
+        self.mouse_latency_scale = tk.Scale(mouse_latency_frame, from_=0.0, to=5, resolution=0.2, orient=tk.HORIZONTAL,
+                                          variable=self.mouse_latency)
+        self.mouse_latency_scale.pack()
+        mouse_latency_frame.pack(anchor=tk.NW)
 
         # Separator
         separator_frame = tk.Frame(left_frame)
@@ -461,9 +477,14 @@ class GUI:
         options.add_argument('--disable-blink-features=AutomationControlled')
         options.add_experimental_option('useAutomationExtension', False)
         try:
-            service = Service()
+            chrome_install = ChromeDriverManager().install()
+
+            folder = os.path.dirname(chrome_install)
+            chromedriver_path = os.path.join(folder, "chromedriver.exe")
+
+            service = ChromeService(chromedriver_path)
             self.chrome = webdriver.Chrome(
-                service=Service(ChromeDriverManager().install()),
+                service=service,
                 options=options
             )
         except WebDriverException:
@@ -475,6 +496,17 @@ class GUI:
             tk.messagebox.showerror(
                 "Error",
                 "Cant find Chrome. You need to have Chrome installed for this to work.",
+            )
+            return
+        except Exception as e:
+            # Other error
+            self.opening_browser = False
+            self.open_browser_button["text"] = "Open Browser"
+            self.open_browser_button["state"] = "normal"
+            self.open_browser_button.update()
+            tk.messagebox.showerror(
+                "Error",
+                f"An error occurred while opening the browser: {e}",
             )
             return
 
@@ -544,6 +576,8 @@ class GUI:
             self.enable_manual_mode.get() == 1,
             self.enable_mouseless_mode.get() == 1,
             self.enable_non_stop_puzzles.get() == 1,
+            self.enable_non_stop_matches.get() == 1,
+            self.mouse_latency.get(),
             self.enable_bongcloud.get() == 1,
             self.slow_mover.get(),
             self.skill_level.get(),
