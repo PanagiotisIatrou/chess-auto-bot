@@ -29,6 +29,7 @@ class LichessGrabber(Grabber):
                     self._board_elem = None
 
     def is_white(self):
+        # sourcery skip: assign-if-exp, boolean-if-exp-identity, remove-unnecessary-cast
         # Get "ranks" child
         children = self._board_elem.find_elements(By.XPATH, "./*")
         child = [x for x in children if "ranks" in x.get_attribute("class")][0]
@@ -38,6 +39,7 @@ class LichessGrabber(Grabber):
             return False
 
     def is_game_over(self):
+        # sourcery skip: assign-if-exp, boolean-if-exp-identity, reintroduce-else, remove-unnecessary-cast
         try:
             # Find the game over window
             self.chrome.find_element(By.XPATH, '//*[@id="main-wrap"]/main/aside/div/section[2]')
@@ -77,6 +79,7 @@ class LichessGrabber(Grabber):
             return False
 
     def get_move_list(self):
+        # sourcery skip: assign-if-exp, merge-else-if-into-elif, use-fstring-for-concatenation
         is_puzzles = self.is_game_puzzles()
 
         # Find the move list element
