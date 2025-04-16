@@ -65,7 +65,7 @@ class ChesscomGrabber(Grabber):
             move_list_elem = self.chrome.find_element(By.CLASS_NAME, "play-controller-scrollable")
         except NoSuchElementException:
             try:
-                move_list_elem = self.chrome.find_element(By.CLASS_NAME, "move-list-wrapper-component")
+                move_list_elem = self.chrome.find_element(By.CLASS_NAME, "mode-swap-move-list-wrapper-component")
             except NoSuchElementException:
                     return None
 
@@ -84,10 +84,11 @@ class ChesscomGrabber(Grabber):
 
             # Check if it is indeed a move
             if "white-move" in move_class or "black-move" in move_class:
-                # Check if it has a figure
+                # Check if it has a figure - search deeper in the structure
                 try:
-                    child = move.find_element(By.XPATH, "./*")
-                    figure = child.get_attribute("data-figurine")
+                    # Look for any element with data-figurine attribute anywhere within this move
+                    figurine_elem = move.find_element(By.CSS_SELECTOR, "[data-figurine]")
+                    figure = figurine_elem.get_attribute("data-figurine")
                 except NoSuchElementException:
                     figure = None
 
