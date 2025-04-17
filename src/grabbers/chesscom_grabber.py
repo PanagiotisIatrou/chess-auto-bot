@@ -7,7 +7,7 @@ from grabbers.grabber import Grabber
 class ChesscomGrabber(Grabber):
     def __init__(self, chrome_url, chrome_session_id):
         super().__init__(chrome_url, chrome_session_id)
-        self.moves_list = {}
+        # The moves_list is now initialized in the base class
 
     def update_board_elem(self):
         try:
@@ -59,6 +59,10 @@ class ChesscomGrabber(Grabber):
             # Return False since the game over window is not found
             return False
 
+    def reset_moves_list(self):
+        """Reset the moves list when a new game starts"""
+        self.moves_list = {}
+
     def get_move_list(self):
         # Find the moves list
         try:
@@ -68,6 +72,13 @@ class ChesscomGrabber(Grabber):
                 move_list_elem = self.chrome.find_element(By.CLASS_NAME, "mode-swap-move-list-wrapper-component")
             except NoSuchElementException:
                     return None
+
+        # Check if we're in a new game by looking at the number of moves
+        # If there are no visible moves but we have moves in our list, we're in a new game
+        visible_moves = move_list_elem.find_elements(By.CSS_SELECTOR, "div.node[data-node]")
+        if len(visible_moves) == 0 and self.moves_list:
+            # Reset moves list for new game
+            self.reset_moves_list()
 
         # Select all children with class containing "white node" or "black node"
         # Moves that are not pawn moves have a different structure

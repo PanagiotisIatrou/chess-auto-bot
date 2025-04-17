@@ -8,9 +8,15 @@ class Grabber(ABC):
     def __init__(self, chrome_url, chrome_session_id):
         self.chrome = attach_to_session(chrome_url, chrome_session_id)
         self._board_elem = None
+        self.moves_list = {}
 
     def get_board(self):
         return self._board_elem
+
+    # Resets the moves list when changing games
+    def reset_moves_list(self):
+        """Reset the moves list when a new game starts"""
+        self.moves_list = {}
 
     # Returns the coordinates of the top left corner of the ChromeDriver
     def get_top_left_corner(self):

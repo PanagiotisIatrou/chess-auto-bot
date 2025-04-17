@@ -288,7 +288,7 @@ class GUI:
         self.topmost_check_button.pack(anchor=tk.NW)
 
         # Create the select stockfish button
-        self.stockfish_path = ""
+        self.stockfish_path = "C:\\Users\\anas\\Downloads\\stockfish-windows-x86-64-avx2\\stockfish\\stockfish-windows-x86-64-avx2"
         self.select_stockfish_button = tk.Button(
             left_frame,
             text="Select Stockfish",

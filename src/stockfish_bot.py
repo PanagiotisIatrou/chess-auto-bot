@@ -113,6 +113,9 @@ class StockfishBot(multiprocess.Process):
             self.grabber = ChesscomGrabber(self.chrome_url, self.chrome_session_id)
         else:
             self.grabber = LichessGrabber(self.chrome_url, self.chrome_session_id)
+            
+        # Reset the grabber's moves list to ensure a clean start
+        self.grabber.reset_moves_list()
 
         # Initialize Stockfish
         parameters = {
@@ -362,6 +365,12 @@ class StockfishBot(multiprocess.Process):
             eval_type = eval_data['type']
             eval_value = eval_data['value']
             
+            # Convert evaluation to player's perspective if playing as black
+            # Stockfish eval is always from white's perspective (+ve for white, -ve for black)
+            player_perspective_eval_value = eval_value
+            if not self.is_white:
+                player_perspective_eval_value = -eval_value  # Negate to get black's perspective
+            
             # Get WDL stats if available
             try:
                 wdl_stats = stockfish.get_wdl_stats()
@@ -382,11 +391,14 @@ class StockfishBot(multiprocess.Process):
                 matches = sum(1 for a, b in zip(black_moves, black_best_moves) if a == b)
                 black_accuracy = f"{matches / len(black_moves) * 100:.1f}%"
             
-            # Format evaluation string
+            # Format evaluation string from player's perspective
             if eval_type == "cp":
-                eval_str = f"{eval_value/100:.2f}"
+                eval_str = f"{player_perspective_eval_value/100:.2f}"
+                # Convert centipawns to decimal value for the eval bar
+                eval_value_decimal = player_perspective_eval_value/100
             else:  # mate
-                eval_str = f"M{eval_value}"
+                eval_str = f"M{player_perspective_eval_value}"
+                eval_value_decimal = player_perspective_eval_value  # Keep mate score as is
             
             # Format WDL string (win/draw/loss percentages)
             total = sum(wdl_stats)
@@ -413,8 +425,35 @@ class StockfishBot(multiprocess.Process):
             bot_accuracy = white_accuracy if self.is_white else black_accuracy
             opponent_accuracy = black_accuracy if self.is_white else white_accuracy
             
+            # Send data to GUI
             data = f"EVAL|{eval_str}|{wdl_str}|{material}|{bot_accuracy}|{opponent_accuracy}"
             self.pipe.send(data)
+            
+            # Send evaluation data to overlay
+            overlay_data = {
+                "eval": eval_value_decimal,
+                "eval_type": eval_type
+            }
+            
+            # Add board position and dimensions for the eval bar positioning
+            board_elem = self.grabber.get_board()
+            if board_elem:
+                # Get the absolute top left corner of the website
+                canvas_x_offset, canvas_y_offset = self.grabber.get_top_left_corner()
+                
+                # Calculate absolute board position and dimensions
+                overlay_data["board_position"] = {
+                    'x': canvas_x_offset + board_elem.location['x'],
+                    'y': canvas_y_offset + board_elem.location['y'],
+                    'width': board_elem.size['width'],
+                    'height': board_elem.size['height']
+                }
+                
+            # Always include the bot's color
+            overlay_data["is_white"] = self.is_white
+            
+            self.overlay_queue.put(overlay_data)
+            
         except Exception as e:
             print(f"Error sending evaluation: {e}")
     
