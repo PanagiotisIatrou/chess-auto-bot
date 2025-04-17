@@ -64,6 +64,46 @@ class GUI:
         self.status_text = tk.Label(status_label, text="Inactive", fg="red")
         self.status_text.pack()
         status_label.pack(anchor=tk.NW)
+        
+        # Create the evaluation info
+        self.eval_frame = tk.Frame(left_frame)
+        
+        # Evaluation (centipawns)
+        eval_label = tk.Frame(self.eval_frame)
+        tk.Label(eval_label, text="Eval:").pack(side=tk.LEFT)
+        self.eval_text = tk.Label(eval_label, text="-")
+        self.eval_text.pack()
+        eval_label.pack(anchor=tk.NW)
+        
+        # WDL (win/draw/loss)
+        wdl_label = tk.Frame(self.eval_frame)
+        tk.Label(wdl_label, text="WDL:").pack(side=tk.LEFT)
+        self.wdl_text = tk.Label(wdl_label, text="-")
+        self.wdl_text.pack()
+        wdl_label.pack(anchor=tk.NW)
+        
+        # Material advantage
+        material_label = tk.Frame(self.eval_frame)
+        tk.Label(material_label, text="Material:").pack(side=tk.LEFT)
+        self.material_text = tk.Label(material_label, text="-")
+        self.material_text.pack()
+        material_label.pack(anchor=tk.NW)
+        
+        # White player accuracy
+        white_acc_label = tk.Frame(self.eval_frame)
+        tk.Label(white_acc_label, text="Bot Acc:").pack(side=tk.LEFT)
+        self.white_acc_text = tk.Label(white_acc_label, text="-")
+        self.white_acc_text.pack()
+        white_acc_label.pack(anchor=tk.NW)
+        
+        # Black player accuracy
+        black_acc_label = tk.Frame(self.eval_frame)
+        tk.Label(black_acc_label, text="Opponent Acc:").pack(side=tk.LEFT)
+        self.black_acc_text = tk.Label(black_acc_label, text="-")
+        self.black_acc_text.pack()
+        black_acc_label.pack(anchor=tk.NW)
+        
+        self.eval_frame.pack(anchor=tk.NW)
 
         # Create the website chooser radio buttons
         self.website = tk.StringVar(value="chesscom")
@@ -154,7 +194,7 @@ class GUI:
         mouse_latency_frame = tk.Frame(left_frame)
         tk.Label(mouse_latency_frame, text="Mouse Latency (seconds)").pack(side=tk.LEFT, pady=(17, 0))
         self.mouse_latency = tk.DoubleVar(value=0.0)
-        self.mouse_latency_scale = tk.Scale(mouse_latency_frame, from_=0.0, to=5, resolution=0.2, orient=tk.HORIZONTAL,
+        self.mouse_latency_scale = tk.Scale(mouse_latency_frame, from_=0.0, to=15, resolution=0.2, orient=tk.HORIZONTAL,
                                           variable=self.mouse_latency)
         self.mouse_latency_scale.pack()
         mouse_latency_frame.pack(anchor=tk.NW)
@@ -418,6 +458,17 @@ class GUI:
                         self.match_moves += moves
                         self.set_moves(moves)
                         self.tree.yview_moveto(1)
+                    elif data[:5] == "EVAL|":
+                        # Parse evaluation data
+                        parts = data.split("|")
+                        if len(parts) >= 5:
+                            eval_str, wdl_str, material_str, bot_accuracy_str, opponent_accuracy_str  = parts[1:]
+                            
+                            bot_acc = bot_accuracy_str
+                            opponent_acc = opponent_accuracy_str
+                            
+                            # Update the evaluation info
+                            self.update_evaluation_display(eval_str, wdl_str, material_str, bot_acc, opponent_acc)
                     elif data[:7] == "ERR_EXE":
                         tk.messagebox.showerror(
                             "Error",
@@ -602,7 +653,13 @@ class GUI:
     def on_stop_button_listener(self):
         # Stop the Stockfish Bot process
         if self.stockfish_bot_process is not None:
-            self.stockfish_bot_process.kill()
+            if self.overlay_screen_process is not None:
+                self.overlay_screen_process.kill()
+                self.overlay_screen_process = None
+
+            if self.stockfish_bot_process.is_alive():
+                self.stockfish_bot_process.kill()
+
             self.stockfish_bot_process = None
 
         # Close the Stockfish Bot pipe
@@ -610,26 +667,36 @@ class GUI:
             self.stockfish_bot_pipe.close()
             self.stockfish_bot_pipe = None
 
-        # Stop the overlay
-        if self.overlay_screen_process is not None:
-            self.overlay_screen_process.kill()
-            self.overlay_screen_process = None
-
-        # Close the overlay pipe
-        if self.overlay_screen_pipe is not None:
-            self.overlay_screen_pipe.close()
-            self.overlay_screen_pipe = None
-
         # Update the status text
         self.running = False
         self.status_text["text"] = "Inactive"
         self.status_text["fg"] = "red"
         self.status_text.update()
+        
+        # Reset evaluation info
+        self.eval_text["text"] = "-"
+        self.eval_text["fg"] = "black"
+        self.wdl_text["text"] = "-"
+        self.material_text["text"] = "-"
+        self.material_text["fg"] = "black"
+        self.white_acc_text["text"] = "-"
+        self.black_acc_text["text"] = "-"
+        
+        # Update the UI
+        self.eval_text.update()
+        self.wdl_text.update()
+        self.material_text.update()
+        self.white_acc_text.update()
+        self.black_acc_text.update()
 
         # Update the run button
-        self.start_button["text"] = "Start"
-        self.start_button["state"] = "normal"
-        self.start_button["command"] = self.on_start_button_listener
+        if not self.restart_after_stopping:
+            self.start_button["text"] = "Start"
+            self.start_button["state"] = "normal"
+            self.start_button["command"] = self.on_start_button_listener
+        else:
+            self.restart_after_stopping = False
+            self.on_start_button_listener()
         self.start_button.update()
 
     def on_topmost_check_button_listener(self):
@@ -710,6 +777,46 @@ class GUI:
         else:
             self.manual_mode_frame.pack_forget()
             self.manual_mode_checkbox.update()
+
+    def update_evaluation_display(self, eval_str, wdl_str, material_str, bot_acc, opponent_acc):
+        self.eval_text["text"] = eval_str
+        # Color based on eval (positive = green, negative = red)
+        try:
+            if eval_str.startswith("M"):  # Mate
+                mate_value = int(eval_str[1:])
+                self.eval_text["fg"] = "green" if mate_value > 0 else "red"
+            else:  # Centipawns
+                eval_value = float(eval_str)
+                self.eval_text["fg"] = "green" if eval_value > 0 else ("black" if eval_value == 0 else "red")
+        except ValueError:
+            self.eval_text["fg"] = "black"
+            
+        # Update WDL
+        self.wdl_text["text"] = wdl_str
+        
+        # Update material
+        self.material_text["text"] = material_str
+        # Color based on material
+        try:
+            if material_str.startswith("+"):
+                self.material_text["fg"] = "green"
+            elif material_str.startswith("-"):
+                self.material_text["fg"] = "red"
+            else:
+                self.material_text["fg"] = "black"
+        except:
+            self.material_text["fg"] = "black"
+            
+        # Update accuracy values
+        self.white_acc_text["text"] = bot_acc
+        self.black_acc_text["text"] = opponent_acc
+        
+        # Update the UI
+        self.eval_text.update()
+        self.wdl_text.update()
+        self.material_text.update()
+        self.white_acc_text.update()
+        self.black_acc_text.update()
 
 
 if __name__ == "__main__":

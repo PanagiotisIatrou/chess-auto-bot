@@ -10,7 +10,6 @@ class LichessGrabber(Grabber):
     def __init__(self, chrome_url, chrome_session_id):
         super().__init__(chrome_url, chrome_session_id)
         self.tag_name = None
-        self.moves_list = {}
 
     def update_board_elem(self):
         # Keep looking for board

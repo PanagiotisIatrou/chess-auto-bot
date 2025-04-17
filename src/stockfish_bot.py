@@ -113,6 +113,9 @@ class StockfishBot(multiprocess.Process):
             self.grabber = ChesscomGrabber(self.chrome_url, self.chrome_session_id)
         else:
             self.grabber = LichessGrabber(self.chrome_url, self.chrome_session_id)
+            
+        # Reset the grabber's moves list to ensure a clean start
+        self.grabber.reset_moves_list()
 
         # Initialize Stockfish
         parameters = {
@@ -165,6 +168,15 @@ class StockfishBot(multiprocess.Process):
 
             # Update Stockfish with the starting position
             stockfish.set_position(move_list_uci)
+            
+            # Track player moves and best moves for accuracy calculation
+            white_moves = []
+            white_best_moves = []
+            black_moves = []
+            black_best_moves = []
+            
+            # Send initial evaluation, WDL, and material data to GUI
+            self.send_eval_data(stockfish, board)
 
             # Notify GUI that bot is ready
             self.pipe.send("START")
@@ -196,6 +208,12 @@ class StockfishBot(multiprocess.Process):
                             move = stockfish.get_best_move()
                     else:
                         move = stockfish.get_best_move()
+                    
+                    # Store best move for accuracy calculation
+                    if board.turn == chess.WHITE:
+                        white_best_moves.append(move)
+                    else:
+                        black_best_moves.append(move)
 
                     # Wait for keypress or player movement if in manual mode
                     self_moved = False
@@ -213,12 +231,22 @@ class StockfishBot(multiprocess.Process):
                                 move_list = self.grabber.get_move_list()
                                 move_san = move_list[-1]
                                 move = board.parse_san(move_san).uci()
+                                # Store actual move for accuracy calculation
+                                if board.turn == chess.WHITE:
+                                    white_moves.append(move)
+                                else:
+                                    black_moves.append(move)
                                 board.push_uci(move)
                                 stockfish.make_moves_from_current_position([move])
                                 break
 
                     if not self_moved:
                         move_san = board.san(chess.Move(chess.parse_square(move[0:2]), chess.parse_square(move[2:4])))
+                        # Store actual move for accuracy calculation
+                        if board.turn == chess.WHITE:
+                            white_moves.append(move)
+                        else:
+                            black_moves.append(move)
                         board.push_uci(move)
                         stockfish.make_moves_from_current_position([move])
                         move_list.append(move_san)
@@ -228,6 +256,9 @@ class StockfishBot(multiprocess.Process):
                             self.make_move(move)
 
                     self.overlay_queue.put([])
+
+                    # Send evaluation, WDL, and material data to GUI
+                    self.send_eval_data(stockfish, board, white_moves, white_best_moves, black_moves, black_best_moves)
 
                     # Send the move to the GUI
                     self.pipe.send("S_MOVE" + move_san)
@@ -255,17 +286,64 @@ class StockfishBot(multiprocess.Process):
                         elif self.enable_non_stop_matches and not self.enable_non_stop_puzzles:
                             self.find_new_online_match()
                         return
-                    move_list = self.grabber.get_move_list()
-                    if move_list is None:
+                    
+                    # Get fresh move list from the grabber and check if it's a new game
+                    new_move_list = self.grabber.get_move_list()
+                    if new_move_list is None:
                         return
-                    if len(move_list) > len(previous_move_list):
+                        
+                    # Check if this is a completely new game (moves reset to 0)
+                    if len(new_move_list) == 0 and len(move_list) > 0:
+                        # Reset everything for the new game
+                        move_list = []
+                        board = chess.Board()
+                        stockfish.set_position([])
+                        # Reset accuracy tracking
+                        white_moves = []
+                        white_best_moves = []
+                        black_moves = []
+                        black_best_moves = []
+                        # Find out what color the player has for the new game
+                        self.is_white = self.grabber.is_white()
+                        self.pipe.send("RESTART")
+                        self.wait_for_gui_to_delete()
+                        # Send initial evaluation, WDL, and material data to GUI
+                        self.send_eval_data(stockfish, board)
+                        self.pipe.send("START")
+                        break
+                        
+                    # Normal case - opponent made a move
+                    if len(new_move_list) > len(previous_move_list):
+                        move_list = new_move_list
                         break
 
                 # Get the move that the opponent made
                 move = move_list[-1]
-                self.pipe.send("S_MOVE" + move)
+                # Get UCI version of the move for accuracy tracking
+                prev_board = board.copy()
                 board.push_san(move)
+                move_uci = prev_board.parse_san(move).uci()
+                
+                # Store actual move for accuracy calculation
+                if prev_board.turn == chess.WHITE:
+                    white_moves.append(move_uci)
+                else:
+                    black_moves.append(move_uci)
+                
+                # Get and store the best move that should have been played
+                best_move = stockfish.get_best_move_time(300)  # Get best move with 300ms of thinking time
+                if prev_board.turn == chess.WHITE:
+                    white_best_moves.append(best_move)
+                else:
+                    black_best_moves.append(best_move)
+                
+                # Send evaluation, WDL, and material data to GUI
                 stockfish.make_moves_from_current_position([str(board.peek())])
+                self.send_eval_data(stockfish, board, white_moves, white_best_moves, black_moves, black_best_moves)
+                
+                # Send the move to the GUI
+                self.pipe.send("S_MOVE" + move)
+                
                 if board.is_checkmate():
                     # Send restart message to GUI
                     if self.enable_non_stop_puzzles and self.grabber.is_game_puzzles():
@@ -278,3 +356,128 @@ class StockfishBot(multiprocess.Process):
             exc_type, exc_obj, exc_tb = sys.exc_info()
             fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
             print(exc_type, fname, exc_tb.tb_lineno)
+
+    def send_eval_data(self, stockfish, board, white_moves=None, white_best_moves=None, black_moves=None, black_best_moves=None):
+        """Send evaluation, WDL, and material data to GUI"""
+        try:
+            # Get evaluation
+            eval_data = stockfish.get_evaluation()
+            eval_type = eval_data['type']
+            eval_value = eval_data['value']
+            
+            # Convert evaluation to player's perspective if playing as black
+            # Stockfish eval is always from white's perspective (+ve for white, -ve for black)
+            player_perspective_eval_value = eval_value
+            if not self.is_white:
+                player_perspective_eval_value = -eval_value  # Negate to get black's perspective
+            
+            # Get WDL stats if available
+            try:
+                wdl_stats = stockfish.get_wdl_stats()
+            except:
+                wdl_stats = [0, 0, 0]
+                
+            # Calculate material advantage (basic version)
+            material = self.calculate_material_advantage(board)
+            
+            # Calculate accuracy if enough moves
+            white_accuracy = "-"
+            black_accuracy = "-"
+            if white_moves and white_best_moves and len(white_moves) > 0 and len(white_moves) == len(white_best_moves):
+                matches = sum(1 for a, b in zip(white_moves, white_best_moves) if a == b)
+                white_accuracy = f"{matches / len(white_moves) * 100:.1f}%"
+            
+            if black_moves and black_best_moves and len(black_moves) > 0 and len(black_moves) == len(black_best_moves):
+                matches = sum(1 for a, b in zip(black_moves, black_best_moves) if a == b)
+                black_accuracy = f"{matches / len(black_moves) * 100:.1f}%"
+            
+            # Format evaluation string from player's perspective
+            if eval_type == "cp":
+                eval_str = f"{player_perspective_eval_value/100:.2f}"
+                # Convert centipawns to decimal value for the eval bar
+                eval_value_decimal = player_perspective_eval_value/100
+            else:  # mate
+                eval_str = f"M{player_perspective_eval_value}"
+                eval_value_decimal = player_perspective_eval_value  # Keep mate score as is
+            
+            # Format WDL string (win/draw/loss percentages)
+            total = sum(wdl_stats)
+            if total > 0:
+                # WDL from Stockfish is from perspective of player to move
+                # Need to invert if it's opponent's turn
+                is_bot_turn = (self.is_white and board.turn == chess.WHITE) or (not self.is_white and board.turn == chess.BLACK)
+                
+                if is_bot_turn:
+                    win_pct = wdl_stats[0] / total * 100
+                    draw_pct = wdl_stats[1] / total * 100
+                    loss_pct = wdl_stats[2] / total * 100
+                else:
+                    # Invert the win/loss when it's opponent's turn
+                    win_pct = wdl_stats[2] / total * 100
+                    draw_pct = wdl_stats[1] / total * 100
+                    loss_pct = wdl_stats[0] / total * 100
+                
+                wdl_str = f"{win_pct:.1f}/{draw_pct:.1f}/{loss_pct:.1f}"
+            else:
+                wdl_str = "?/?/?"
+            
+            # Determine bot and opponent accuracies based on bot's color
+            bot_accuracy = white_accuracy if self.is_white else black_accuracy
+            opponent_accuracy = black_accuracy if self.is_white else white_accuracy
+            
+            # Send data to GUI
+            data = f"EVAL|{eval_str}|{wdl_str}|{material}|{bot_accuracy}|{opponent_accuracy}"
+            self.pipe.send(data)
+            
+            # Send evaluation data to overlay
+            overlay_data = {
+                "eval": eval_value_decimal,
+                "eval_type": eval_type
+            }
+            
+            # Add board position and dimensions for the eval bar positioning
+            board_elem = self.grabber.get_board()
+            if board_elem:
+                # Get the absolute top left corner of the website
+                canvas_x_offset, canvas_y_offset = self.grabber.get_top_left_corner()
+                
+                # Calculate absolute board position and dimensions
+                overlay_data["board_position"] = {
+                    'x': canvas_x_offset + board_elem.location['x'],
+                    'y': canvas_y_offset + board_elem.location['y'],
+                    'width': board_elem.size['width'],
+                    'height': board_elem.size['height']
+                }
+                
+            # Always include the bot's color
+            overlay_data["is_white"] = self.is_white
+            
+            self.overlay_queue.put(overlay_data)
+            
+        except Exception as e:
+            print(f"Error sending evaluation: {e}")
+    
+    def calculate_material_advantage(self, board):
+        """Calculate material advantage in the position"""
+        piece_values = {
+            chess.PAWN: 1,
+            chess.KNIGHT: 3,
+            chess.BISHOP: 3,
+            chess.ROOK: 5,
+            chess.QUEEN: 9
+        }
+        
+        white_material = 0
+        black_material = 0
+        
+        for piece_type in piece_values:
+            white_material += len(board.pieces(piece_type, chess.WHITE)) * piece_values[piece_type]
+            black_material += len(board.pieces(piece_type, chess.BLACK)) * piece_values[piece_type]
+        
+        advantage = white_material - black_material
+        if advantage > 0:
+            return f"+{advantage}"
+        elif advantage < 0:
+            return str(advantage)
+        else:
+            return "0"
