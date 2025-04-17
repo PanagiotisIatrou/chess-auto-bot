@@ -327,6 +327,13 @@ class StockfishBot(multiprocess.Process):
                 else:
                     black_moves.append(move_uci)
                 
+                # Get and store the best move that should have been played
+                best_move = stockfish.get_best_move_time(300)  # Get best move with 300ms of thinking time
+                if prev_board.turn == chess.WHITE:
+                    white_best_moves.append(best_move)
+                else:
+                    black_best_moves.append(best_move)
+                
                 # Send evaluation, WDL, and material data to GUI
                 stockfish.make_moves_from_current_position([str(board.peek())])
                 self.send_eval_data(stockfish, board, white_moves, white_best_moves, black_moves, black_best_moves)
@@ -384,15 +391,29 @@ class StockfishBot(multiprocess.Process):
             # Format WDL string (win/draw/loss percentages)
             total = sum(wdl_stats)
             if total > 0:
-                win_pct = wdl_stats[0] / total * 100
-                draw_pct = wdl_stats[1] / total * 100
-                loss_pct = wdl_stats[2] / total * 100
+                # WDL from Stockfish is from perspective of player to move
+                # Need to invert if it's opponent's turn
+                is_bot_turn = (self.is_white and board.turn == chess.WHITE) or (not self.is_white and board.turn == chess.BLACK)
+                
+                if is_bot_turn:
+                    win_pct = wdl_stats[0] / total * 100
+                    draw_pct = wdl_stats[1] / total * 100
+                    loss_pct = wdl_stats[2] / total * 100
+                else:
+                    # Invert the win/loss when it's opponent's turn
+                    win_pct = wdl_stats[2] / total * 100
+                    draw_pct = wdl_stats[1] / total * 100
+                    loss_pct = wdl_stats[0] / total * 100
+                
                 wdl_str = f"{win_pct:.1f}/{draw_pct:.1f}/{loss_pct:.1f}"
             else:
                 wdl_str = "?/?/?"
             
-            # Send data to GUI
-            data = f"EVAL|{eval_str}|{wdl_str}|{material}|{white_accuracy}|{black_accuracy}"
+            # Determine bot and opponent accuracies based on bot's color
+            bot_accuracy = white_accuracy if self.is_white else black_accuracy
+            opponent_accuracy = black_accuracy if self.is_white else white_accuracy
+            
+            data = f"EVAL|{eval_str}|{wdl_str}|{material}|{bot_accuracy}|{opponent_accuracy}"
             self.pipe.send(data)
         except Exception as e:
             print(f"Error sending evaluation: {e}")

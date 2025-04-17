@@ -462,12 +462,10 @@ class GUI:
                         # Parse evaluation data
                         parts = data.split("|")
                         if len(parts) >= 5:
-                            eval_str, wdl_str, material_str, accuracy_str = parts[1:5]
+                            eval_str, wdl_str, material_str, bot_accuracy_str, opponent_accuracy_str  = parts[1:]
                             
-                            # Split accuracy values (using comma separator now)
-                            accuracies = accuracy_str.split(",")
-                            bot_acc = accuracies[0] if len(accuracies) > 0 else "-"
-                            opponent_acc = accuracies[1] if len(accuracies) > 1 else "-"
+                            bot_acc = bot_accuracy_str
+                            opponent_acc = opponent_accuracy_str
                             
                             # Update the evaluation info
                             self.update_evaluation_display(eval_str, wdl_str, material_str, bot_acc, opponent_acc)
@@ -781,7 +779,6 @@ class GUI:
             self.manual_mode_checkbox.update()
 
     def update_evaluation_display(self, eval_str, wdl_str, material_str, bot_acc, opponent_acc):
-        # Update evaluation
         self.eval_text["text"] = eval_str
         # Color based on eval (positive = green, negative = red)
         try:
